@@ -3,7 +3,9 @@ package com.app.dosen
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.app.dosen.databinding.ActivityHomeBinding
+import com.app.dosen.fragment.AboutUsFragment
 import com.app.dosen.fragment.HomeFragment
+import com.app.dosen.fragment.SearchFragment
 import com.app.dosen.util.BaseView
 
 class HomeActivity : BaseView() {
@@ -17,7 +19,8 @@ class HomeActivity : BaseView() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> loadFragment(HomeFragment())
-//                R.id.nav_about_us -> loadFragment(ListFoodFragment())
+                R.id.nav_search -> loadFragment(SearchFragment())
+                R.id.nav_about_us -> loadFragment(AboutUsFragment())
 //                R.id.nav_search -> {
 //                    binding.ivRedDot.hideView()
 //                }

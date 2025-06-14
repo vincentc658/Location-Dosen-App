@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.app.dosen.databinding.ItemDosenBinding
 import com.app.dosen.model.DosenModel
 
-class DosenAdapter(private val list: List<DosenModel>) :
+class DosenAdapter(private var list: List<DosenModel>) :
     RecyclerView.Adapter<DosenAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemDosenBinding) :
@@ -31,4 +31,8 @@ class DosenAdapter(private val list: List<DosenModel>) :
     }
 
     override fun getItemCount(): Int = list.size
+    fun updateData(newList: List<DosenModel>) {
+        list = newList
+        notifyDataSetChanged()
+    }
 }
