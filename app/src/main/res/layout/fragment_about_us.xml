@@ -14,14 +14,14 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:title="About Us"
+        app:title="Tentang Kami"
         app:titleTextColor="@android:color/white" />
 
     <!-- Konten Fragment -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:padding="24dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -29,43 +29,64 @@
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
-            <!-- Header manual (hapus jika pakai Toolbar sebagai title utama) -->
             <!-- Foto Profil -->
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/imgFoto"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_marginTop="24dp"
-                android:padding="8dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_launcher_background" />
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="32dp"
+                android:src="@drawable/ic_launcher_foreground"
+                android:elevation="4dp"
+                android:background="@android:color/white"
+                android:padding="4dp" />
 
-            <!-- Nama / Label Profil -->
+            <!-- Nama Profil -->
             <TextView
                 android:id="@+id/tvProfil"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Profil Pengembang"
-                android:textSize="14sp"
+                android:layout_marginTop="16dp"
+                android:text="User"
+                android:textColor="#212121"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- Garis Bawah -->
+            <!-- Deskripsi singkat -->
+            <TextView
+                android:id="@+id/tvDeskripsi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Android Developer Dan UI Designer"
+                android:textColor="#757575"
+                android:textSize="14sp" />
+
+            <!-- Garis pemisah -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="16dp"
-                android:background="#000000" />
+                android:layout_marginTop="24dp"
+                android:background="#DDDDDD" />
 
             <!-- Tentang Aplikasi -->
             <TextView
                 android:id="@+id/tvTentang"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="48dp"
+                android:layout_marginTop="32dp"
                 android:text="Tentang Aplikasi"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="#212121" />
+
+            <TextView
+                android:id="@+id/tvIsiTentang"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Aplikasi ini dirancang untuk membantu pengguna dalam mengelola informasi dengan mudah dan efisien. Dikembangkan oleh tim profesional dengan antarmuka yang ramah pengguna."
+                android:textSize="14sp"
+                android:textColor="#444444" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

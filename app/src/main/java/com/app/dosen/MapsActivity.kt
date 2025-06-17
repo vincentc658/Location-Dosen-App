@@ -19,6 +19,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import android.graphics.Color
 import android.util.Log
+import com.app.dosen.databinding.ActivityInformasiRuangKerjaBinding
+import com.app.dosen.databinding.ActivityMapsBinding
+import com.app.dosen.util.BaseView
 import okhttp3.Response
 import com.google.maps.android.PolyUtil
 import com.google.android.gms.maps.model.PolylineOptions
@@ -27,7 +30,8 @@ import org.json.JSONObject
 
 import java.io.IOException
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : BaseView(), OnMapReadyCallback {
+    private lateinit var binding: ActivityMapsBinding
 
     private lateinit var mMap: GoogleMap
     private val lokasiDosen = LatLng(-6.9932, 110.4230) // contoh koordinat ruangan dosen
@@ -35,7 +39,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_maps)
+        binding = ActivityMapsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -50,6 +55,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lokasiDosen, 16f))
 
         // Arahkan dari lokasi pengguna ke lokasi dosen
+        showLoading("Mengambil Lokasi anda")
         getMyLocation { myLocation ->
             getDirections(myLocation, lokasiDosen)
         }
@@ -85,6 +91,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
+                hideLoading()
+                showToast(e.message)
                 Log.d("getDirections ","--> ${e.message}")
             }
 
@@ -93,11 +101,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 val routes = json.getJSONArray("routes")
 
                 if (routes.length() > 0) {
-                    val steps = routes.getJSONObject(0)
+                    val leg = routes.getJSONObject(0)
                         .getJSONArray("legs")
                         .getJSONObject(0)
-                        .getJSONArray("steps")
 
+                    val durationText = leg.getJSONObject("duration").getString("text")
+
+                    val steps = leg.getJSONArray("steps")
                     val path = mutableListOf<LatLng>()
 
                     for (i in 0 until steps.length()) {
@@ -107,12 +117,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
 
                     runOnUiThread {
+                        // Tambahkan polyline ke peta
                         mMap.addPolyline(
                             PolylineOptions()
                                 .addAll(path)
                                 .color(Color.BLUE)
                                 .width(10f)
                         )
+
+                        // Tampilkan estimasi waktu sampai
+                        binding.tvDuration.text = "Perkiraan waktu tiba: $durationText"
+                        hideLoading()
                     }
                 }
             }

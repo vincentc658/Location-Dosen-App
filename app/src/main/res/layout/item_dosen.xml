@@ -4,28 +4,49 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    android:layout_marginHorizontal="@dimen/size_4"
-    card_view:cardElevation="3dp">
+    android:layout_marginHorizontal="4dp"
+    android:background="@android:color/white"
+    card_view:cardCornerRadius="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvNamaDosen"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nama Dosen"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        <!-- Foto Dosen -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/imgFotoDosen"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="Foto Dosen" />
 
-        <TextView
-            android:id="@+id/tvProdiDosen"
-            android:layout_width="wrap_content"
+        <!-- Info Dosen -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Program Studi"
-            android:textSize="14sp" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvNamaDosen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dr. Andi Saputra, M.Kom"
+                android:textColor="#212121"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvProdiDosen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Teknik Informatika"
+                android:textColor="#666666"
+                android:textSize="14sp" />
+        </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
