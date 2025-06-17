@@ -21,8 +21,11 @@ class RuangKerjaActivity: BaseView() {
         setContentView(binding.root)
         val bundle = intent.extras
         val dosen: DosenModel? = bundle?.getParcelable("data")
+        binding.tvKodeRuangan.text= dosen?.kodeRuangan
+        binding.tvLantaiRuangan.text= dosen?.lantaiRuangan
+        binding.tvNamaGedung.text= dosen?.namaGedung
         Glide.with(this)
-            .load(dosen?.imageProfile)
+            .load(dosen?.fotoDosen)
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
                     e: GlideException?,
@@ -72,9 +75,10 @@ class RuangKerjaActivity: BaseView() {
             })
             .into(binding.imgRuangKerja)
 
-        Log.d("image ", "-- > ${dosen?.imageProfile}")
         binding.iconLocation.setOnClickListener {
-            goToPage(MapsActivity::class.java)
+            val bundle = Bundle()
+            bundle.putParcelable("data", dosen)
+            goToPage(MapsActivity::class.java,bundle)
         }
     }
 }

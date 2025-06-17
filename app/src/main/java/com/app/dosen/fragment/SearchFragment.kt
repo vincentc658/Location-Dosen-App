@@ -11,6 +11,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.app.dosen.DosenDataManager
 import com.app.dosen.RuangKerjaActivity
 import com.app.dosen.adapter.DosenAdapter
 import com.app.dosen.databinding.FragmentSearchBinding
@@ -36,38 +37,12 @@ class SearchFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        fullList = listOf(
-            DosenModel(
-                "Dr. Andi",
-                "Sistem Informasi",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            ),
-            DosenModel(
-                "Prof. Budi",
-                "Teknik Informatika",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            ),
-            DosenModel(
-                "Mbak Chika",
-                "Ilmu Komputer",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            ),
-            DosenModel(
-                "Pak Darto",
-                "Teknik Elektro",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            )
-        )
-
 
         val prodiList = listOf("Semua", "Informatika", "Sistem Informasi", "Teknik Elektro")
         val spinnerAdapter = ArrayAdapter(requireContext(), R.layout.simple_spinner_item, prodiList)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerProdi.adapter = spinnerAdapter
+        fullList=DosenDataManager().generateDosenModels()
         adapter = DosenAdapter(fullList) { dosen ->
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)

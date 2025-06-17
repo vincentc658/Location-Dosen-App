@@ -21,6 +21,7 @@ import android.graphics.Color
 import android.util.Log
 import com.app.dosen.databinding.ActivityInformasiRuangKerjaBinding
 import com.app.dosen.databinding.ActivityMapsBinding
+import com.app.dosen.model.DosenModel
 import com.app.dosen.util.BaseView
 import okhttp3.Response
 import com.google.maps.android.PolyUtil
@@ -34,14 +35,18 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
     private lateinit var binding: ActivityMapsBinding
 
     private lateinit var mMap: GoogleMap
-    private val lokasiDosen = LatLng(-6.9932, 110.4230) // contoh koordinat ruangan dosen
+    private var lokasiDosen = LatLng(-6.9932, 110.4230) // contoh koordinat ruangan dosen
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        val bundle = intent.extras
+        val dosen: DosenModel? = bundle?.getParcelable("data")
+        dosen?.let {
+            lokasiDosen = LatLng(it.lat, it.long)
+        }
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 

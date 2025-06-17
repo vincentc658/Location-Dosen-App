@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.app.dosen.DosenDataManager
 import com.app.dosen.R
 import com.app.dosen.RuangKerjaActivity
 import com.app.dosen.adapter.DosenAdapter
@@ -39,33 +40,8 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun setupRecyclerView() {
-        val dataDummy = listOf(
-            DosenModel(
-                "Dr. Andi",
-                "Sistem Informasi",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            ),
-            DosenModel(
-                "Prof. Budi",
-                "Teknik Informatika",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            ),
-            DosenModel(
-                "Mbak Chika",
-                "Ilmu Komputer",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            ),
-            DosenModel(
-                "Pak Darto",
-                "Teknik Elektro",
-                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
-                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
-            )
-        )
-        val adapter = DosenAdapter(dataDummy) { dosen ->
+
+        val adapter = DosenAdapter(DosenDataManager().generateDosenModels()) { dosen ->
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)
             goToPage(RuangKerjaActivity::class.java, bundle)

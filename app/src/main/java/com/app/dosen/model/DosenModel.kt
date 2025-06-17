@@ -7,8 +7,13 @@ import kotlinx.parcelize.Parcelize
 data class DosenModel(
     val nama: String,
     val prodi: String,
-    val imageProfile : String,
-    val imageRuangKerja : String
+    val namaGedung: String,
+    val kodeRuangan: String,
+    val lantaiRuangan: String,
+    val lat: Double,
+    val long: Double,
+    val fotoDosen: String,
+    val fotoRuangan: String
 ): Parcelable{
     fun convertGoogleDriveUrl(originalUrl: String): String {
         val regex = Regex("https://drive\\.google\\.com/file/d/([a-zA-Z0-9_-]+)")
@@ -28,10 +33,10 @@ data class DosenModel(
         return matchResult?.groupValues?.get(1)
     }
     fun getImageProfileUrl(): String? {
-        val fileId = extractDriveFileId(imageProfile)
+        val fileId = extractDriveFileId(fotoDosen)
         return fileId?.let { "https://drive.google.com/uc?export=download&id=$it" }
     }
     fun getImageRuangKerjaUrl(): String? {
-        return convertGoogleDriveUrl(imageRuangKerja)
+        return convertGoogleDriveUrl(fotoRuangan)
     }
 }

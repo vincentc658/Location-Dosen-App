@@ -24,7 +24,7 @@ class DosenAdapter(
             binding.tvNamaDosen.text = item.nama
             binding.tvProdiDosen.text = item.prodi
             Glide.with(binding.root.context)
-                .load(item.imageProfile)
+                .load(item.fotoDosen)
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
                         e: GlideException?,
