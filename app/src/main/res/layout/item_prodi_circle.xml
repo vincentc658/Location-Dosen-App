@@ -1,28 +1,44 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="4dp">
 
-    <ImageView
-        android:id="@+id/imgIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_circle"
-        android:src="@drawable/ic_launcher_foreground"
-        app:tint="@color/black" />
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center_horizontal"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="4dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#DDD"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:backgroundTint="@android:color/white">
+
+        <ImageView
+            android:id="@+id/imgIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="12dp"
+            android:src="@drawable/ic_launcher_foreground"
+            android:scaleType="centerInside"
+            app:tint="?attr/colorPrimary" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
+        android:layout_gravity="center_horizontal"
         android:id="@+id/tvLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
         android:text="Label"
         android:textAlignment="center"
-        android:textColor="#000"
-        android:textSize="12sp" />
+        android:textColor="@android:color/black"
+        android:textSize="14sp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium" />
 </LinearLayout>

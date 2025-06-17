@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F9F9F9">
+
+    <!-- Toolbar di luar ScrollView -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:title="Informasi Ruang Kerja"
+        app:titleTextColor="@android:color/white" />
+
+    <!-- ScrollView hanya punya satu anak -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@android:color/white"
+            android:elevation="4dp"
+            android:layout_margin="8dp">
+
+            <!-- Isi seperti sebelumnya -->
+            <ImageView
+                android:id="@+id/imgRuangKerja"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:layout_marginTop="16dp"
+                android:scaleType="centerCrop"
+                android:background="#DDDDDD"
+                android:contentDescription="Gambar Ruang Kerja" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:background="#BDBDBD" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/tvNamaGedung"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nama Gedung"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="#212121" />
+
+                <TextView
+                    android:id="@+id/tvKodeRuangan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kode Ruangan"
+                    android:textSize="15sp"
+                    android:textColor="#424242"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tvLantaiRuangan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lantai Ruangan"
+                    android:textSize="15sp"
+                    android:textColor="#424242"
+                    android:layout_marginTop="2dp" />
+
+                <ImageView
+                    android:id="@+id/iconLocation"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginTop="8dp"
+                    android:src="@drawable/ic_location"
+                    app:tint="#FF5722" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/ivProfilDosen"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_marginTop="24dp"
+                android:background="#DDDDDD"
+                android:contentDescription="Profil Dosen" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

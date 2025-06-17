@@ -6,14 +6,20 @@ import androidx.recyclerview.widget.RecyclerView
 import com.app.dosen.databinding.ItemDosenBinding
 import com.app.dosen.model.DosenModel
 
-class DosenAdapter(private var list: List<DosenModel>) :
-    RecyclerView.Adapter<DosenAdapter.ViewHolder>() {
+class DosenAdapter(
+    private var list: List<DosenModel>,
+    private val onItemClick: (DosenModel) -> Unit
+) : RecyclerView.Adapter<DosenAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemDosenBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: DosenModel) {
             binding.tvNamaDosen.text = item.nama
             binding.tvProdiDosen.text = item.prodi
+            // Handle click
+            binding.root.setOnClickListener {
+                onItemClick(item)
+            }
         }
     }
 

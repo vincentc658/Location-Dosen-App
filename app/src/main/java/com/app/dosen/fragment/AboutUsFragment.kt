@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.app.dosen.adapter.DosenAdapter
 import com.app.dosen.databinding.FragmentAboutUsBinding
 import com.app.dosen.databinding.FragmentSearchBinding
 import com.app.dosen.model.DosenModel

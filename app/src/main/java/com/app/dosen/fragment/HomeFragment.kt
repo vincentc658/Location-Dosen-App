@@ -7,19 +7,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.dosen.R
+import com.app.dosen.RuangKerjaActivity
 import com.app.dosen.adapter.DosenAdapter
+import com.app.dosen.adapter.MenuAdapter
 import com.app.dosen.databinding.FragmentHomeBinding
 import com.app.dosen.databinding.ItemProdiCircleBinding
 import com.app.dosen.model.DosenModel
+import com.app.dosen.model.MenuItem
+import com.app.dosen.util.BaseFragment
 
-class HomeFragment : Fragment() {
+class HomeFragment : BaseFragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var dosenAdapter: DosenAdapter
-    private lateinit var menuBindings: List<ItemProdiCircleBinding>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,65 +31,83 @@ class HomeFragment : Fragment() {
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
 
-        // Bind setiap menu
-        menuBindings = listOf(
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu1)),
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu2)),
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu3)),
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu4)),
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu5)),
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu6)),
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu7)),
-            ItemProdiCircleBinding.bind(binding.root.findViewById(R.id.menu8)),
-        )
 
 
-        setupMenus()
+        setupMenu()
         setupRecyclerView()
         return binding.root
     }
 
-    private fun setupMenus() {
-        val menuTitles = listOf(
-            "Makanan", "Minuman", "Resep", "Favorit",
-            "Belanja", "Tips", "Profil", "Tentang"
-        )
-
-        menuBindings.forEachIndexed { index, item ->
-            item.tvLabel.text = menuTitles[index]
-            item.imgIcon.setImageResource(getIconFor(index)) // optional
-            item.root.setOnClickListener {
-                Toast.makeText(requireContext(), "Klik: ${menuTitles[index]}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun getIconFor(index: Int): Int {
-        // Ganti dengan icon kamu
-        return when (index) {
-            0 -> R.drawable.ic_launcher_foreground
-            1 -> R.drawable.ic_launcher_foreground
-            2 -> R.drawable.ic_launcher_foreground
-            3 -> R.drawable.ic_launcher_foreground
-            4 -> R.drawable.ic_launcher_foreground
-            5 -> R.drawable.ic_launcher_foreground
-            6 -> R.drawable.ic_launcher_foreground
-            7 -> R.drawable.ic_launcher_foreground
-            else -> R.drawable.ic_launcher_foreground
-        }
-    }
-
     private fun setupRecyclerView() {
         val dataDummy = listOf(
-            DosenModel("Dr. Andi", "Sistem Informasi"),
-            DosenModel("Prof. Budi", "Teknik Informatika"),
-            DosenModel("Mbak Chika", "Ilmu Komputer"),
-            DosenModel("Pak Darto", "Teknik Elektro")
+            DosenModel(
+                "Dr. Andi",
+                "Sistem Informasi",
+                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
+                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
+            ),
+            DosenModel(
+                "Prof. Budi",
+                "Teknik Informatika",
+                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
+                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
+            ),
+            DosenModel(
+                "Mbak Chika",
+                "Ilmu Komputer",
+                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
+                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
+            ),
+            DosenModel(
+                "Pak Darto",
+                "Teknik Elektro",
+                "http://simpeg2.unnes.ac.id/photo/198210192014041001",
+                "https://drive.google.com/file/d/1vwAgXeoN-Up4No5nHnTLmdNk-O8BBS9j/view"
+            )
         )
-
-        dosenAdapter = DosenAdapter(dataDummy)
+        val adapter = DosenAdapter(dataDummy) { dosen ->
+            val bundle = Bundle()
+            bundle.putParcelable("data", dosen)
+            goToPage(RuangKerjaActivity::class.java, bundle)
+        }
+        dosenAdapter = adapter
         binding.recyclerDosen.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerDosen.adapter = dosenAdapter
+    }
+
+    private fun setupMenu() {
+        val menuList = listOf(
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Bangunan", "PTB"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Sipil", "Teksip"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Arsitektur", "Arsi"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Mesin", "PTM"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Otomotif", "PTO"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Mesin", "TM"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Elektro", "PTE"),
+            MenuItem(
+                R.drawable.ic_launcher_foreground,
+                "Pendidikan Teknik Informatika dan Komputer",
+                "PTIK"
+            ),
+            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Elektro", "TE"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Komputer", "Tekom"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Kesejahteraan Keluarga", "PKK"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Busana", "Tabus"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Boga", "Tabog"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Kecantika", "Takec"),
+            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Kimia", "Tekim")
+        )
+
+        val adapter = MenuAdapter(menuList) { selectedMenu ->
+            Toast.makeText(
+                requireContext(),
+                "Klik: ${selectedMenu.label} (${selectedMenu.inisial})",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        binding.recyclerMenu.layoutManager = GridLayoutManager(requireContext(), 4)
+        binding.recyclerMenu.adapter = adapter
+
     }
 
     override fun onDestroyView() {

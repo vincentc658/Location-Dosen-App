@@ -1,132 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:title="Beranda"
-        app:titleTextColor="@android:color/white"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        android:layout_height="match_parent">
 
-    <!-- Isi ScrollView -->
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nestedScroll"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:padding="16dp">
-
-        <LinearLayout
+        <!-- Toolbar -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:title="Beranda"
+            app:titleTextColor="@android:color/white"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
+        <!-- Isi ScrollView -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:padding="16dp">
 
-            <!-- Grid Menu 4x2 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Baris 1 -->
-                <LinearLayout
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    tools:listitem="@layout/item_dosen"
+                    android:nestedScrollingEnabled="false" />
+                <!-- Grid Menu 4x2 -->
 
-                    <include
-                        android:id="@+id/menu1"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
 
-                    <include
-                        android:id="@+id/menu2"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-
-                    <include
-                        android:id="@+id/menu3"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-
-                    <include
-                        android:id="@+id/menu4"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <!-- Baris 2 -->
-                <LinearLayout
+                <!-- Judul Daftar Dosen -->
+                <TextView
+                    android:id="@+id/tvDosenTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="8dp">
+                    android:text="Daftar Dosen"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="8dp" />
 
-                    <include
-                        android:id="@+id/menu5"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-
-                    <include
-                        android:id="@+id/menu6"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-
-                    <include
-                        android:id="@+id/menu7"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-
-                    <include
-                        android:id="@+id/menu8"
-                        layout="@layout/item_prodi_circle"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
+                <!-- RecyclerView (non-scrollable) -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerDosen"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:listitem="@layout/item_dosen"
+                    android:nestedScrollingEnabled="false" />
             </LinearLayout>
-
-            <!-- Judul Daftar Dosen -->
-            <TextView
-                android:id="@+id/tvDosenTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Daftar Dosen"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:paddingTop="24dp"
-                android:paddingBottom="8dp" />
-
-            <!-- RecyclerView (non-scrollable) -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerDosen"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:listitem="@layout/item_dosen"
-                android:nestedScrollingEnabled="false" />
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-</LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>

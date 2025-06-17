@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-parcelize")
 }
 
 android {
@@ -44,7 +45,13 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.circleimageview)
-
+    implementation(libs.glide)
+    implementation(libs.google.maps)
+    implementation(libs.google.maps)
+    implementation(libs.maps.utils)
+    implementation(libs.play.location)
+    implementation(libs.okhttp)
+    implementation(libs.maps)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
