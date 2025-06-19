@@ -99,11 +99,13 @@ class SearchFragment : BaseFragment() {
                         null
                     }
                 }
-                filterData() // tampilkan hasil awal
+
+                // Cek apakah fragment masih attached ke activity dan view belum dihancurkan
+                if (isAdded && _binding != null) {
+                    filterData()
+                }
             }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(), "Gagal memuat data dosen", Toast.LENGTH_SHORT).show()
-            }
+
     }
 
     private fun setupSearchFilter() {

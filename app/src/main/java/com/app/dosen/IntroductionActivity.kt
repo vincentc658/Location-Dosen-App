@@ -14,6 +14,6 @@ class IntroductionActivity : BaseView() {
         Handler().postDelayed({
             goToPage(HomeActivity::class.java)
             finish()
-        }, 1500)
+        }, 3000)
     }
 }

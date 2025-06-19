@@ -32,32 +32,29 @@ class AboutUsFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val image ="https://lh3.googleusercontent.com/a/ACg8ocL2QfPBuusUTtGZjQhjl1G_GIR0Si3Y1Eej9lNM9MVF9HAHPYlm=s192-c-rg-br100"
         Glide.with(this)
-            .load(image)
-            .listener(object : RequestListener<Drawable> {
-                override fun onLoadFailed(
-                    e: GlideException?,
-                    model: Any?,
-                    target: Target<Drawable>,
-                    isFirstResource: Boolean
-                ): Boolean {
-                    e?.printStackTrace()
-                    binding.imgFoto.setImageResource(R.drawable.ic_launcher_foreground)
-                    return true // true berarti kita handle sendiri error-nya
-                }
+            .load("https://i.imgur.com/3aSteh8.jpeg")
+            .into(binding.imgFoto);
 
-                override fun onResourceReady(
-                    resource: Drawable?,
-                    model: Any?,
-                    target: Target<Drawable>?,
-                    dataSource: DataSource?,
-                    isFirstResource: Boolean
-                ): Boolean {
-                    return false // false berarti Glide akan melanjutkan handle image seperti biasa
-                }
-            })
-            .into(binding.imgFoto)
+        Glide.with(this)
+            .load("http://simpeg2.unnes.ac.id/photo/131993878")
+            .into(binding.imgFotoDose)
 
+        binding.tvDeskripsi.text="NIM : 5302419007\n" +
+                "Prodi : Pendidikan Teknik Informatika & Komputer"
+        binding.tvDeskripsiDosen.text="NIP : 196708181992031004\n" +
+                "Jabatan : Lektor Kepala (Koordinator Program Studi D3/S1) Pendidikan Teknik Elektro"
+
+    }
+    fun convertGoogleDriveUrl(originalUrl: String): String {
+        val regex = Regex("https://drive\\.google\\.com/file/d/([a-zA-Z0-9_-]+)")
+        val match = regex.find(originalUrl)
+
+        return if (match != null && match.groupValues.size > 1) {
+            val fileId = match.groupValues[1]
+            "https://drive.google.com/uc?export=download&id=$fileId"
+        } else {
+            originalUrl // jika format tidak cocok, kembalikan aslinya
+        }
     }
 }

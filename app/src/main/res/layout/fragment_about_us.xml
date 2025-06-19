@@ -28,6 +28,13 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Profil Pengembang"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#212121" />
 
             <!-- Foto Profil -->
             <de.hdodenhof.circleimageview.CircleImageView
@@ -46,18 +53,60 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Wahyu Ananta"
+                android:text="Wahyu Ananta Kuharian"
                 android:textColor="#212121"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
             <!-- Deskripsi singkat -->
             <TextView
+                android:textAlignment="center"
+
                 android:id="@+id/tvDeskripsi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Dosen Pembimging : Dr. Agus Suryanto, M.T"
+                android:text="Dosen Pembimbing : Dr. Agus Suryanto, M.T"
+                android:textColor="#757575"
+                android:textSize="14sp" />
+
+            <!-- Garis pemisah -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="#DDDDDD" />
+
+            <!-- Foto Profil -->
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/imgFotoDose"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="32dp"
+                android:src="@drawable/ic_launcher_foreground"
+                android:elevation="4dp"
+                android:background="@android:color/white"
+                android:padding="4dp" />
+
+            <!-- Nama Profil -->
+            <TextView
+                android:id="@+id/tvProfilDosen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Dr. Agus Suryanto, M.T."
+                android:textColor="#212121"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Deskripsi singkat -->
+            <TextView
+                android:id="@+id/tvDeskripsiDosen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAlignment="center"
+                android:text="Dosen Pembimbing : Dr. Agus Suryanto, M.T"
                 android:textColor="#757575"
                 android:textSize="14sp" />
 
@@ -84,8 +133,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Aplikasi mobile location based service untuk pencarian lokasi ruang kerja
-dosen fakultas Teknik Universitas Negeri Semarang"
+                android:text="Aplikasi MyDosenFT dikembangkan untuk membantu mahasiswa Fakultas Teknik
+Universitas Negeri Semarang dalam pencarian lokasi ruang kerja dosen. Dengan adanya
+aplikasi ini diharapkan dapat mempermudah pencarian lokasi ruang kerja dosen tanpa harus
+bertanya dengan civitas akademik, sehingga waktu pencarian akan lebih efisien."
                 android:textSize="14sp"
                 android:textColor="#444444" />
         </LinearLayout>
