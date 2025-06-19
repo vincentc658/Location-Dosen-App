@@ -123,6 +123,24 @@
                         android:background="#DDDDDD"
                         android:contentDescription="Profil Dosen"
                         android:scaleType="centerInside" />
+                    <TextView
+                        android:id="@+id/tvNameDosen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gedung Teknik Informatika"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:textColor="#212121" />
+
+                    <TextView
+                        android:id="@+id/tvProdi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Kode: R.205"
+                        android:textSize="15sp"
+                        android:textColor="#616161"
+                        android:layout_marginTop="4dp" />
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>

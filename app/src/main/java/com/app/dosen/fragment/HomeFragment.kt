@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.dosen.DosenDataManager
 import com.app.dosen.R
 import com.app.dosen.RuangKerjaActivity
+import com.app.dosen.SearchActivity
 import com.app.dosen.adapter.DosenAdapter
 import com.app.dosen.adapter.MenuAdapter
 import com.app.dosen.databinding.FragmentHomeBinding
@@ -75,6 +76,9 @@ class HomeFragment : BaseFragment() {
         )
 
         val adapter = MenuAdapter(menuList) { selectedMenu ->
+            val bundle = Bundle()
+            bundle.putString("prodi", selectedMenu.label)
+            goToPage(SearchActivity::class.java, bundle)
             Toast.makeText(
                 requireContext(),
                 "Klik: ${selectedMenu.label} (${selectedMenu.inisial})",

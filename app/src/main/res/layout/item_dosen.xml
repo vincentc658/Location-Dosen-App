@@ -14,13 +14,6 @@
         android:orientation="horizontal"
         android:padding="16dp">
 
-        <!-- Foto Dosen -->
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/imgFotoDosen"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginEnd="12dp"
-            android:contentDescription="Foto Dosen" />
 
         <!-- Info Dosen -->
         <LinearLayout

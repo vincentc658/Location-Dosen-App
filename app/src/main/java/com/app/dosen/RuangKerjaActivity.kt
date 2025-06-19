@@ -24,6 +24,8 @@ class RuangKerjaActivity: BaseView() {
         binding.tvKodeRuangan.text= dosen?.kodeRuangan
         binding.tvLantaiRuangan.text= dosen?.lantaiRuangan
         binding.tvNamaGedung.text= dosen?.namaGedung
+        binding.tvProdi.text= dosen?.prodi
+        binding.tvNameDosen.text= dosen?.nama
         Glide.with(this)
             .load(dosen?.fotoDosen)
             .listener(object : RequestListener<Drawable> {

@@ -38,11 +38,26 @@ class SearchFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
 
-        val prodiList = listOf("Semua", "Informatika", "Sistem Informasi", "Teknik Elektro")
+        val prodiList = listOf("Semua",
+            "Pendidikan Teknik Bangunan",
+            "Teknik Sipil",
+            "Teknik Arsitektur",
+            "Pendidikan Teknik Mesin",
+            "Pendidikan Teknik Otomotif",
+            "Teknik Mesin",
+            "Pendidikan Teknik Elektro",
+            "Pendidikan Teknik Informatika dan Komputer",
+            "Teknik Elektro",
+            "Teknik Komputer",
+            "Pendidikan Kesejahteraan Keluarga",
+            "Pendidikan Tata Busana",
+            "Pendidikan Tata Boga",
+            "Pendidikan Tata Kecantikan",
+            "Teknik Kimia")
         val spinnerAdapter = ArrayAdapter(requireContext(), R.layout.simple_spinner_item, prodiList)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerProdi.adapter = spinnerAdapter
-        fullList=DosenDataManager().generateDosenModels()
+        fullList = DosenDataManager().generateDosenModels()
         adapter = DosenAdapter(fullList) { dosen ->
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)

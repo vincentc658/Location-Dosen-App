@@ -23,31 +23,6 @@ class DosenAdapter(
         fun bind(item: DosenModel) {
             binding.tvNamaDosen.text = item.nama
             binding.tvProdiDosen.text = item.prodi
-            Glide.with(binding.root.context)
-                .load(item.fotoDosen)
-                .listener(object : RequestListener<Drawable> {
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        e?.printStackTrace()
-                        binding.imgFotoDosen.setImageResource(R.drawable.ic_launcher_foreground)
-                        return true // true berarti kita handle sendiri error-nya
-                    }
-
-                    override fun onResourceReady(
-                        resource: Drawable?,
-                        model: Any?,
-                        target: Target<Drawable>?,
-                        dataSource: DataSource?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        return false // false berarti Glide akan melanjutkan handle image seperti biasa
-                    }
-                })
-                .into(binding.imgFotoDosen)
             // Handle click
             binding.root.setOnClickListener {
                 onItemClick(item)

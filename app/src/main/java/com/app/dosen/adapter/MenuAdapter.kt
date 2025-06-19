@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.app.dosen.model.MenuItem
 import android.view.ViewGroup
 import android.view.LayoutInflater
+import android.widget.LinearLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.dosen.R
 
 class MenuAdapter(
@@ -17,6 +19,7 @@ class MenuAdapter(
     inner class MenuViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val icon: ImageView = itemView.findViewById(R.id.imgIcon)
         val label: TextView = itemView.findViewById(R.id.tvLabel)
+        val root: LinearLayout = itemView.findViewById(R.id.root)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuViewHolder {
@@ -29,9 +32,8 @@ class MenuAdapter(
         val item = menuList[position]
         holder.icon.setImageResource(item.iconRes)
         holder.label.text = item.label
-
         // Handle onClick
-        holder.itemView.setOnClickListener {
+        holder.root.setOnClickListener {
             onItemClick(item)
         }
     }

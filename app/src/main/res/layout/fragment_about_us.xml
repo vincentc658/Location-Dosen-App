@@ -46,7 +46,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="User"
+                android:text="Wahyu Ananta"
                 android:textColor="#212121"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -57,7 +57,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Android Developer Dan UI Designer"
+                android:text="Dosen Pembimging : Dr. Agus Suryanto, M.T"
                 android:textColor="#757575"
                 android:textSize="14sp" />
 
@@ -84,7 +84,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Aplikasi ini dirancang untuk membantu pengguna dalam mengelola informasi dengan mudah dan efisien. Dikembangkan oleh tim profesional dengan antarmuka yang ramah pengguna."
+                android:text="Aplikasi mobile location based service untuk pencarian lokasi ruang kerja
+dosen fakultas Teknik Universitas Negeri Semarang"
                 android:textSize="14sp"
                 android:textColor="#444444" />
         </LinearLayout>
