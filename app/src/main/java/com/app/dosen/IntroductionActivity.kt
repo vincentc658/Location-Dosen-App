@@ -13,6 +13,7 @@ class IntroductionActivity : BaseView() {
         setContentView(binding.root)
         Handler().postDelayed({
             goToPage(HomeActivity::class.java)
+            finish()
         }, 1500)
     }
 }

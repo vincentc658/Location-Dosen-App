@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.maps.utils)
     implementation(libs.play.location)
     implementation(libs.okhttp)
+    implementation(libs.dots)
     implementation(libs.maps)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

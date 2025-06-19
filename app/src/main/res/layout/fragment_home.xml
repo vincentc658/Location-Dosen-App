@@ -30,13 +30,24 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerMenu"
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPagerMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    tools:listitem="@layout/item_dosen"
-                    android:nestedScrollingEnabled="false" />
-                <!-- Grid Menu 4x2 -->
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="8dp"
+                    android:clipToPadding="false" />
+
+                <com.tbuonomo.viewpagerdotsindicator.DotsIndicator
+                    android:id="@+id/dotsIndicator"
+                    app:dotsSize="@dimen/size_8"
+                    app:dotsColor="@color/ligt_brown"
+                    app:selectedDotColor="@color/brown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="16dp"/>
+
 
 
                 <!-- Judul Daftar Dosen -->
