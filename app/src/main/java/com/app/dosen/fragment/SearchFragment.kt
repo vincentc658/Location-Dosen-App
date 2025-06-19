@@ -9,14 +9,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.app.dosen.DosenDataManager
 import com.app.dosen.RuangKerjaActivity
 import com.app.dosen.adapter.DosenAdapter
 import com.app.dosen.databinding.FragmentSearchBinding
 import com.app.dosen.model.DosenModel
 import com.app.dosen.util.BaseFragment
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SearchFragment : BaseFragment() {
 
@@ -24,7 +25,7 @@ class SearchFragment : BaseFragment() {
     private val binding get() = _binding!!
 
     private lateinit var adapter: DosenAdapter
-    private lateinit var fullList: List<DosenModel>
+    private var fullList: List<DosenModel> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,8 +38,15 @@ class SearchFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupSpinner()
+        setupRecyclerView()
+        setupSearchFilter()
+        loadDataFromFirestore()
+    }
 
-        val prodiList = listOf("Semua",
+    private fun setupSpinner() {
+        val prodiList = listOf(
+            "Semua",
             "Pendidikan Teknik Bangunan",
             "Teknik Sipil",
             "Teknik Arsitektur",
@@ -53,27 +61,56 @@ class SearchFragment : BaseFragment() {
             "Pendidikan Tata Busana",
             "Pendidikan Tata Boga",
             "Pendidikan Tata Kecantikan",
-            "Teknik Kimia")
+            "Teknik Kimia"
+        )
         val spinnerAdapter = ArrayAdapter(requireContext(), R.layout.simple_spinner_item, prodiList)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerProdi.adapter = spinnerAdapter
-        fullList = DosenDataManager().generateDosenModels()
-        adapter = DosenAdapter(fullList) { dosen ->
+    }
+
+    private fun setupRecyclerView() {
+        adapter = DosenAdapter(emptyList()) { dosen ->
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)
             goToPage(RuangKerjaActivity::class.java, bundle)
         }
         binding.recyclerDosen.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerDosen.adapter = adapter
+    }
 
-        setupSearchFilter()
+    private fun loadDataFromFirestore() {
+        FirebaseFirestore.getInstance().collection("dosen")
+            .get()
+            .addOnSuccessListener { result ->
+                fullList = result.mapNotNull { doc ->
+                    try {
+                        DosenModel(
+                            nama = doc.getString("nama") ?: "",
+                            prodi = doc.getString("prodi") ?: "",
+                            namaGedung = doc.getString("namaGedung") ?: "",
+                            kodeRuangan = doc.getString("kodeRuangan") ?: "",
+                            lantaiRuangan = doc.getString("lantaiRuangan") ?: "",
+                            lat = doc.getDouble("lat") ?: 0.0,
+                            long = doc.getDouble("long") ?: 0.0,
+                            fotoDosen = doc.getString("fotoDosen") ?: "",
+                            fotoRuangan = doc.getString("fotoRuangan") ?: ""
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                filterData() // tampilkan hasil awal
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Gagal memuat data dosen", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun setupSearchFilter() {
         binding.etSearch.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-            override fun afterTextChanged(p0: Editable?) {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
                 filterData()
             }
         })

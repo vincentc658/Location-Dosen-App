@@ -21,13 +21,11 @@ class HomeActivity : BaseView() {
                 R.id.nav_home -> loadFragment(HomeFragment())
                 R.id.nav_search -> loadFragment(SearchFragment())
                 R.id.nav_about_us -> loadFragment(AboutUsFragment())
-//                R.id.nav_search -> {
-//                    binding.ivRedDot.hideView()
-//                }
             }
 
             true
         }
+//        DosenDataManager().uploadToFirestore()
     }
     private fun loadFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()

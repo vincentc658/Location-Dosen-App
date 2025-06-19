@@ -1,6 +1,8 @@
 package com.app.dosen
 
+import android.util.Log
 import com.app.dosen.model.DosenModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 // Class untuk mengelola data dosen
@@ -133,5 +135,21 @@ class DosenDataManager {
         }
 
         return dosenModels
+    }
+    fun uploadToFirestore() {
+        val db = FirebaseFirestore.getInstance()
+        val collection = db.collection("dosen")
+        val dataList = generateDosenModels()
+
+        for (dosen in dataList) {
+            // Gunakan nama sebagai ID dokumen agar unik, atau bisa juga pakai auto-ID
+            collection.add(dosen)
+                .addOnSuccessListener {
+                    Log.d("FirestoreUpload", "Berhasil upload: ${dosen.nama}")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FirestoreUpload", "Gagal upload ${dosen.nama}: ${e.message}")
+                }
+        }
     }
 }

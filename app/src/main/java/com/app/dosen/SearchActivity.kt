@@ -4,38 +4,37 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.dosen.adapter.DosenAdapter
 import com.app.dosen.databinding.ActivitySearchBinding
 import com.app.dosen.model.DosenModel
 import com.app.dosen.util.BaseView
+import com.google.firebase.firestore.FirebaseFirestore
+import android.widget.Toast
 
 class SearchActivity : BaseView() {
 
     private lateinit var binding: ActivitySearchBinding
     private lateinit var adapter: DosenAdapter
-    private lateinit var fullList: List<DosenModel>
-    private var prodi="Semua"
+    private var fullList: List<DosenModel> = emptyList()
+    private var prodi: String = "Semua"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySearchBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         val bundle = intent.extras
-        prodi= bundle?.getString("prodi")?:"Semua"
-        binding.tvProdi.text="Prodi : $prodi"
+        prodi = bundle?.getString("prodi") ?: "Semua"
+        binding.tvProdi.text = "Prodi : $prodi"
+
         setupRecyclerView()
         setupSearchFilter()
+        loadDataFromFirestore()
     }
 
-
     private fun setupRecyclerView() {
-        fullList = DosenDataManager().generateDosenModels()
-
-        adapter = DosenAdapter(fullList) { dosen ->
+        adapter = DosenAdapter(emptyList()) { dosen ->
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)
             goToPage(RuangKerjaActivity::class.java, bundle)
@@ -43,7 +42,6 @@ class SearchActivity : BaseView() {
 
         binding.recyclerDosen.layoutManager = LinearLayoutManager(this)
         binding.recyclerDosen.adapter = adapter
-        filterData()
     }
 
     private fun setupSearchFilter() {
@@ -54,8 +52,35 @@ class SearchActivity : BaseView() {
                 filterData()
             }
         })
+    }
 
+    private fun loadDataFromFirestore() {
+        FirebaseFirestore.getInstance().collection("dosen")
+            .get()
+            .addOnSuccessListener { result ->
+                fullList = result.mapNotNull { doc ->
+                    try {
+                        DosenModel(
+                            nama = doc.getString("nama") ?: "",
+                            prodi = doc.getString("prodi") ?: "",
+                            namaGedung = doc.getString("namaGedung") ?: "",
+                            kodeRuangan = doc.getString("kodeRuangan") ?: "",
+                            lantaiRuangan = doc.getString("lantaiRuangan") ?: "",
+                            lat = doc.getDouble("lat") ?: 0.0,
+                            long = doc.getDouble("long") ?: 0.0,
+                            fotoDosen = doc.getString("fotoDosen") ?: "",
+                            fotoRuangan = doc.getString("fotoRuangan") ?: ""
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
 
+                filterData()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Gagal memuat data dosen", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun filterData() {

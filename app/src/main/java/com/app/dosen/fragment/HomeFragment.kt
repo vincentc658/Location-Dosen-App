@@ -21,6 +21,8 @@ import com.app.dosen.databinding.ItemProdiCircleBinding
 import com.app.dosen.model.DosenModel
 import com.app.dosen.model.MenuItem
 import com.app.dosen.util.BaseFragment
+import com.app.dosen.util.BaseView
+import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeFragment : BaseFragment() {
 
@@ -42,16 +44,45 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun setupRecyclerView() {
-
-        val adapter = DosenAdapter(DosenDataManager().generateDosenModels()) { dosen ->
+        binding.recyclerDosen.layoutManager = LinearLayoutManager(requireContext())
+        dosenAdapter = DosenAdapter(emptyList()) { dosen ->
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)
             goToPage(RuangKerjaActivity::class.java, bundle)
         }
-        dosenAdapter = adapter
-        binding.recyclerDosen.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerDosen.adapter = dosenAdapter
+        (requireActivity() as BaseView).showLoading("")
+        // Ambil data dari Firestore
+        FirebaseFirestore.getInstance()
+            .collection("dosen")
+            .get()
+            .addOnSuccessListener { result ->
+                val dosenList = result.mapNotNull { doc ->
+                    try {
+                        DosenModel(
+                            nama = doc.getString("nama") ?: "",
+                            prodi = doc.getString("prodi") ?: "",
+                            namaGedung = doc.getString("namaGedung") ?: "",
+                            kodeRuangan = doc.getString("kodeRuangan") ?: "",
+                            lantaiRuangan = doc.getString("lantaiRuangan") ?: "",
+                            lat = doc.getDouble("lat") ?: 0.0,
+                            long = doc.getDouble("long") ?: 0.0,
+                            fotoDosen = doc.getString("fotoDosen") ?: "",
+                            fotoRuangan = doc.getString("fotoRuangan") ?: ""
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                dosenAdapter.updateData(dosenList)
+                (requireActivity() as BaseView).hideLoading()
+            }
+            .addOnFailureListener {
+                (requireActivity() as BaseView).hideLoading()
+                Toast.makeText(requireContext(), "Gagal memuat data dosen", Toast.LENGTH_SHORT).show()
+            }
     }
+
     private fun setupMenuPager() {
         val allMenus = listOf(
             MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Bangunan", "PTB"),
@@ -84,43 +115,6 @@ class HomeFragment : BaseFragment() {
         binding.dotsIndicator.setViewPager2(binding.viewPagerMenu)
     }
 
-//    private fun setupMenu() {
-//        val menuList = listOf(
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Bangunan", "PTB"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Sipil", "Teksip"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Arsitektur", "Arsi"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Mesin", "PTM"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Otomotif", "PTO"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Mesin", "TM"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Elektro", "PTE"),
-//            MenuItem(
-//                R.drawable.ic_launcher_foreground,
-//                "Pendidikan Teknik Informatika dan Komputer",
-//                "PTIK"
-//            ),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Elektro", "TE"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Komputer", "Tekom"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Kesejahteraan Keluarga", "PKK"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Busana", "Tabus"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Boga", "Tabog"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Kecantika", "Takec"),
-//            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Kimia", "Tekim")
-//        )
-//
-//        val adapter = MenuAdapter(menuList) { selectedMenu ->
-//            val bundle = Bundle()
-//            bundle.putString("prodi", selectedMenu.label)
-//            goToPage(SearchActivity::class.java, bundle)
-//            Toast.makeText(
-//                requireContext(),
-//                "Klik: ${selectedMenu.label} (${selectedMenu.inisial})",
-//                Toast.LENGTH_SHORT
-//            ).show()
-//        }
-//        binding.recyclerMenu.layoutManager = GridLayoutManager(requireContext(), 4)
-//        binding.recyclerMenu.adapter = adapter
-//
-//    }
 
     override fun onDestroyView() {
         super.onDestroyView()
