@@ -68,7 +68,7 @@
                     android:textSize="16sp"
                     android:textColor="@color/black"
                     android:textStyle="bold"
-                    android:paddingTop="24dp"
+                    android:paddingTop="8dp"
                     android:paddingBottom="8dp" />
 
                 <!-- RecyclerView (non-scrollable) -->

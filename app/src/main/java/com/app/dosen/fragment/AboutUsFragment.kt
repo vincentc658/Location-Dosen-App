@@ -40,10 +40,10 @@ class AboutUsFragment: Fragment() {
             .load("http://simpeg2.unnes.ac.id/photo/131993878")
             .into(binding.imgFotoDose)
 
-        binding.tvDeskripsi.text="NIM : 5302419007\n" +
-                "Prodi : Pendidikan Teknik Informatika & Komputer"
-        binding.tvDeskripsiDosen.text="NIP : 196708181992031004\n" +
-                "Jabatan : Lektor Kepala (Koordinator Program Studi D3/S1) Pendidikan Teknik Elektro"
+        binding.tvDeskripsi.text="Mahasiswa\n" +
+                "Pendidikan Teknik Informatika & Komputer"
+        binding.tvDeskripsiDosen.text="Dosen Pembimbing\n" +
+                "Pendidikan Teknik Elektro"
 
     }
 
