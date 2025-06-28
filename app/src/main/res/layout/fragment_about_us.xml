@@ -7,15 +7,15 @@
     android:background="@android:color/white"
     android:orientation="vertical">
 
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/navy"
+        app:titleTextColor="@color/white"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:title="Tentang Kami"
-        app:titleTextColor="@android:color/white" />
+        app:titleCentered="true"/>
 
     <!-- Konten Fragment -->
     <ScrollView

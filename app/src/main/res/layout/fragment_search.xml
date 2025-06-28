@@ -5,16 +5,15 @@
     android:background="#F9F9F9"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/navy"
+        app:titleTextColor="@color/white"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:title="Pencarian"
-        app:titleTextColor="@android:color/white"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
-
+        app:titleCentered="true"/>
 
     <!-- Search Input -->
     <com.google.android.material.card.MaterialCardView

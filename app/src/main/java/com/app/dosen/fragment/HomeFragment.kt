@@ -85,21 +85,21 @@ class HomeFragment : BaseFragment() {
 
     private fun setupMenuPager() {
         val allMenus = listOf(
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Bangunan", "PTB"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Sipil", "Teksip"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Arsitektur", "Arsi"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Mesin", "PTM"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Otomotif", "PTO"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Mesin", "TM"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Elektro", "PTE"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Teknik Informatika dan Komputer", "PTIK"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Elektro", "TE"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Komputer", "Tekom"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Kesejahteraan Keluarga", "PKK"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Busana", "Tabus"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Boga", "Tabog"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Pendidikan Tata Kecantikan", "Takec"),
-            MenuItem(R.drawable.ic_launcher_foreground, "Teknik Kimia", "Tekim")
+            MenuItem(R.drawable.ic_ptb, "Pendidikan Teknik Bangunan", "PTB"),
+            MenuItem(R.drawable.ic_teksip, "Teknik Sipil", "Teksip"),
+            MenuItem(R.drawable.ic_tekars, "Teknik Arsitektur", "Arsi"),
+            MenuItem(R.drawable.ic_ptm, "Pendidikan Teknik Mesin", "PTM"),
+            MenuItem(R.drawable.ic_pto, "Pendidikan Teknik Otomotif", "PTO"),
+            MenuItem(R.drawable.ic_tm, "Teknik Mesin", "TM"),
+            MenuItem(R.drawable.ic_pte, "Pendidikan Teknik Elektro", "PTE"),
+            MenuItem(R.drawable.ic_ptik, "Pendidikan Teknik Informatika dan Komputer", "PTIK"),
+            MenuItem(R.drawable.ic_te, "Teknik Elektro", "TE"),
+            MenuItem(R.drawable.ic_tekom, "Teknik Komputer", "Tekom"),
+            MenuItem(R.drawable.ic_pkk, "Pendidikan Kesejahteraan Keluarga", "PKK"),
+            MenuItem(R.drawable.ic_tabus, "Pendidikan Tata Busana", "Tabus"),
+            MenuItem(R.drawable.ic_tabog, "Pendidikan Tata Boga", "Tabog"),
+            MenuItem(R.drawable.ic_takec, "Pendidikan Tata Kecantikan", "Takec"),
+            MenuItem(R.drawable.ic_tekim, "Teknik Kimia", "Tekim")
         )
 
         // Split ke dalam page 8 item per halaman

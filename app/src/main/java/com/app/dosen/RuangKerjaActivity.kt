@@ -21,11 +21,17 @@ class RuangKerjaActivity: BaseView() {
         setContentView(binding.root)
         val bundle = intent.extras
         val dosen: DosenModel? = bundle?.getParcelable("data")
-        binding.tvKodeRuangan.text= dosen?.kodeRuangan
-        binding.tvLantaiRuangan.text= dosen?.lantaiRuangan
-        binding.tvNamaGedung.text= dosen?.namaGedung
-        binding.tvProdi.text= dosen?.prodi
-        binding.tvNameDosen.text= dosen?.nama
+        binding.itemKodeRuangan.tvLabel.text="Kode Ruangan"
+        binding.itemKodeRuangan.tvValue.text=dosen?.kodeRuangan
+
+        binding.itemLantaiRuangan.tvLabel.text="Lantai Ruangan"
+        binding.itemLantaiRuangan.tvValue.text=dosen?.lantaiRuangan
+
+        binding.itemGedungRuangan.tvLabel.text="Gedung Ruangan"
+        binding.itemGedungRuangan.tvValue.text=dosen?.namaGedung
+
+        binding.tvDeskripsi.text= dosen?.prodi
+        binding.tvName.text= dosen?.nama
         Glide.with(this)
             .load(dosen?.fotoDosen)
             .listener(object : RequestListener<Drawable> {
@@ -36,7 +42,7 @@ class RuangKerjaActivity: BaseView() {
                     isFirstResource: Boolean
                 ): Boolean {
                     e?.printStackTrace()
-                    binding.ivProfilDosen.setImageResource(R.drawable.ic_launcher_foreground)
+                    binding.ivProfile.setImageResource(R.drawable.ic_launcher_foreground)
                     return true // true berarti kita handle sendiri error-nya
                 }
 
@@ -50,7 +56,7 @@ class RuangKerjaActivity: BaseView() {
                     return false // false berarti Glide akan melanjutkan handle image seperti biasa
                 }
             })
-            .into(binding.ivProfilDosen)
+            .into(binding.ivProfile)
         Glide.with(this)
             .load(dosen?.getImageRuangKerjaUrl())
             .listener(object : RequestListener<Drawable> {
@@ -77,10 +83,17 @@ class RuangKerjaActivity: BaseView() {
             })
             .into(binding.imgRuangKerja)
 
-        binding.iconLocation.setOnClickListener {
+        binding.cvNavigation.setOnClickListener {
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)
             goToPage(MapsActivity::class.java,bundle)
         }
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressedDispatcher.onBackPressed()
+        return true
+    }
+
 }

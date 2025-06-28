@@ -26,11 +26,18 @@ class SearchActivity : BaseView() {
 
         val bundle = intent.extras
         prodi = bundle?.getString("prodi") ?: "Semua"
-        binding.tvProdi.text = "Prodi : $prodi"
+        binding.tvProdi.text = "Daftar Dosen"
+        binding.toolbar.title = prodi
 
         setupRecyclerView()
         setupSearchFilter()
         loadDataFromFirestore()
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressedDispatcher.onBackPressed()
+        return true
     }
 
     private fun setupRecyclerView() {

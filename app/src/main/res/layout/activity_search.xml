@@ -2,18 +2,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:background="#F9F9F9"
+    android:background="@color/red_light"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:background="@color/navy"
+        app:popupTheme="@style/ThemeOverlay.Material3.Light"
         app:title="Pencarian"
-        app:titleTextColor="@android:color/white"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        app:navigationIconTint="@color/white"
+        app:titleTextColor="@color/white"
+        app:titleCentered="true" />
+
     <TextView
         android:id="@+id/tvProdi"
         android:layout_width="match_parent"
@@ -28,6 +30,7 @@
     <!-- Search Input -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
+        android:visibility="gone"
         android:layout_marginHorizontal="@dimen/size_16"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -51,6 +54,7 @@
         android:id="@+id/recyclerDosen"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="@dimen/size_16"
         android:layout_marginHorizontal="@dimen/size_16"
         android:layout_weight="1"
         android:clipToPadding="false"
