@@ -112,6 +112,9 @@ class DosenDataManager {
         lat: Double = -7.05046,
         long: Double = 110.40146,
         fotoDosen: String = "http://simpeg2.unnes.ac.id/photo/132086677",
+        deskripsiRuangan: String = "1. Masuk melalui pintu utama\n" +
+                "2. Setelah itu belok kekiri sampai ujung ruangan\n" +
+                "3. Lokasi ruang dosen berada pada ujung ruangan",
         fotoRuangan: String = "https://drive.google.com/file/d/1id8xYExcr0041xKt9o1MB1SnOrC1HKRn/view?usp=sharing"
     ): List<DosenModel> {
         val dosenModels = mutableListOf<DosenModel>()
@@ -128,7 +131,8 @@ class DosenDataManager {
                         lat = lat,
                         long = long,
                         fotoDosen = fotoDosen,
-                        fotoRuangan = fotoRuangan
+                        fotoRuangan = fotoRuangan,
+                        deskripsiRuangan = deskripsiRuangan
                     )
                 )
             }

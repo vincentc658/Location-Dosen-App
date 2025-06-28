@@ -32,6 +32,7 @@ class RuangKerjaActivity: BaseView() {
 
         binding.tvDeskripsi.text= dosen?.prodi
         binding.tvName.text= dosen?.nama
+        binding.tvDeskripsiRuangan.text= dosen?.deskripsiRuangan
         Glide.with(this)
             .load(dosen?.fotoDosen)
             .listener(object : RequestListener<Drawable> {

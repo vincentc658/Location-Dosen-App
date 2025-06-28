@@ -76,6 +76,7 @@ class SearchActivity : BaseView() {
                             lat = doc.getDouble("lat") ?: 0.0,
                             long = doc.getDouble("long") ?: 0.0,
                             fotoDosen = doc.getString("fotoDosen") ?: "",
+                            deskripsiRuangan = doc.getString("deskripsiRuangan") ?: "",
                             fotoRuangan = doc.getString("fotoRuangan") ?: ""
                         )
                     } catch (e: Exception) {

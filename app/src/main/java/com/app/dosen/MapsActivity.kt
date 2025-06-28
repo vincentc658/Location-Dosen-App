@@ -84,7 +84,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             travelMode = "driving"
             binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(true)
-            getDirections(myLatLng!!, lokasiDosen)
+//            getDirections(myLatLng!!, lokasiDosen)
         }
 
         binding.llWalking.setOnClickListener {
@@ -92,7 +92,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             travelMode = "walking"
             binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(false)
-            getDirections(myLatLng!!, lokasiDosen)
+//            getDirections(myLatLng!!, lokasiDosen)
         }
 
         binding.cvCancel.setOnClickListener { finish() }

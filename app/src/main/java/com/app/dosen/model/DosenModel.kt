@@ -13,6 +13,7 @@ data class DosenModel(
     val lat: Double,
     val long: Double,
     val fotoDosen: String,
+    val deskripsiRuangan: String,
     val fotoRuangan: String
 ): Parcelable{
     fun convertGoogleDriveUrl(originalUrl: String): String {
