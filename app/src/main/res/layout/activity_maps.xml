@@ -70,6 +70,21 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/ivNav"
                 app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:paddingHorizontal="@dimen/size_16"
+                android:paddingVertical="@dimen/size_4"
+                android:background="@drawable/bg_light_blue"
+                android:id="@+id/tvMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/size_16"
+                android:text="Driving"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -199,7 +214,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/size_16"
-                    android:text="2.0 km"
+                    android:text="0.0 km"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -250,7 +265,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/size_16"
-                    android:text="2.0 km"
+                    android:text="-"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />

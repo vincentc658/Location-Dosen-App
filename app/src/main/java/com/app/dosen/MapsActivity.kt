@@ -31,6 +31,7 @@ import com.app.dosen.model.DosenModel
 import com.app.dosen.util.BaseView
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.Polyline
 import okhttp3.Response
 import com.google.maps.android.PolyUtil
 import com.google.android.gms.maps.model.PolylineOptions
@@ -47,6 +48,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
     private var lokasiDosen = LatLng(-6.9932, 110.4230) // contoh koordinat ruangan dosen
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
     private var travelMode: String = "driving" // default
+    private var currentPolyline: Polyline? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,9 +71,9 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 return@setOnClickListener
             }
             travelMode = "driving"
-//            binding.tvMode.text=travelMode
+            binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(true)
-//            getDirections(myLatLng!!, lokasiDosen)
+            getDirections(myLatLng!!, lokasiDosen)
         }
 
         binding.llWalking.setOnClickListener {
@@ -79,14 +81,15 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 return@setOnClickListener
             }
             travelMode = "walking"
-//            binding.tvMode.text=travelMode
+            binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(false)
-//            getDirections(myLatLng!!, lokasiDosen)
+            getDirections(myLatLng!!, lokasiDosen)
         }
         binding.cvCancel.setOnClickListener {
             finish()
         }
         binding.cvNavigation.setOnClickListener {
+            showLoading("Mengambil Rute...")
             getDirections(myLatLng!!, lokasiDosen)
 
         }
@@ -199,19 +202,24 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                     }
 
                     runOnUiThread {
-                        // Tambahkan polyline ke peta
-                        mMap.addPolyline(
+                        // Hapus polyline sebelumnya jika ada
+                        currentPolyline?.remove()
+
+                        // Tambahkan polyline baru dan simpan referensinya
+                        currentPolyline = mMap.addPolyline(
                             PolylineOptions()
                                 .addAll(path)
                                 .color(Color.BLUE)
                                 .width(10f)
                         )
 
-                        // Tampilkan estimasi waktu sampai
+                        // Tampilkan estimasi waktu dan jarak
                         binding.tvEstTime.text = durationText
-                        binding.tvDistance.text =distanceText
+                        binding.tvDistance.text = distanceText
+
                         hideLoading()
                     }
+
                 }
             }
         })
