@@ -51,7 +51,7 @@
                     android:id="@+id/dotsIndicator"
                     app:dotsSize="@dimen/size_8"
                     app:dotsColor="@color/white"
-                    app:selectedDotColor="@color/brown"
+                    app:selectedDotColor="@color/navy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
