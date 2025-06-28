@@ -46,15 +46,5 @@ class AboutUsFragment: Fragment() {
                 "Jabatan : Lektor Kepala (Koordinator Program Studi D3/S1) Pendidikan Teknik Elektro"
 
     }
-    fun convertGoogleDriveUrl(originalUrl: String): String {
-        val regex = Regex("https://drive\\.google\\.com/file/d/([a-zA-Z0-9_-]+)")
-        val match = regex.find(originalUrl)
 
-        return if (match != null && match.groupValues.size > 1) {
-            val fileId = match.groupValues[1]
-            "https://drive.google.com/uc?export=download&id=$fileId"
-        } else {
-            originalUrl // jika format tidak cocok, kembalikan aslinya
-        }
-    }
 }

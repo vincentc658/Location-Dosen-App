@@ -13,16 +13,24 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.Manifest
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import android.graphics.Color
 import android.util.Log
+import android.widget.TextView
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
 import com.app.dosen.databinding.ActivityInformasiRuangKerjaBinding
 import com.app.dosen.databinding.ActivityMapsBinding
 import com.app.dosen.model.DosenModel
 import com.app.dosen.util.BaseView
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import okhttp3.Response
 import com.google.maps.android.PolyUtil
 import com.google.android.gms.maps.model.PolylineOptions
@@ -35,8 +43,10 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
     private lateinit var binding: ActivityMapsBinding
 
     private lateinit var mMap: GoogleMap
+    private var myLatLng: LatLng? = null
     private var lokasiDosen = LatLng(-6.9932, 110.4230) // contoh koordinat ruangan dosen
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
+    private var travelMode: String = "driving" // default
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,18 +61,70 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         fusedLocationProvider = LocationServices.getFusedLocationProviderClient(this)
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.tvDestination.text = dosen?.namaGedung
+        binding.llDriving.setOnClickListener {
+            if (myLatLng == null) {
+                return@setOnClickListener
+            }
+            travelMode = "driving"
+//            binding.tvMode.text=travelMode
+            highlightSelectedMode(true)
+//            getDirections(myLatLng!!, lokasiDosen)
+        }
+
+        binding.llWalking.setOnClickListener {
+            if (myLatLng == null) {
+                return@setOnClickListener
+            }
+            travelMode = "walking"
+//            binding.tvMode.text=travelMode
+            highlightSelectedMode(false)
+//            getDirections(myLatLng!!, lokasiDosen)
+        }
+        binding.cvCancel.setOnClickListener {
+            finish()
+        }
+        binding.cvNavigation.setOnClickListener {
+            getDirections(myLatLng!!, lokasiDosen)
+
+        }
+
+    }
+
+    private fun highlightSelectedMode(isDriving: Boolean) {
+        val selectedBg = R.drawable.bg_white_border_navy
+        val unselectedBg = R.drawable.bg_white_border_grey
+        val selectedTextColor = getColor(R.color.navy)
+        val unselectedTextColor = getColor(R.color.black)
+
+        binding.llDriving.setBackgroundResource(if (isDriving) selectedBg else unselectedBg)
+        binding.llWalking.setBackgroundResource(if (!isDriving) selectedBg else unselectedBg)
+
+        // Optional: ubah warna text kalau kamu punya akses TextView langsung
+        val drivingText = binding.llDriving.findViewById<TextView>(R.id.drivingText)
+        val walkingText = binding.llWalking.findViewById<TextView>(R.id.walkingText)
+        drivingText?.setTextColor(if (isDriving) selectedTextColor else unselectedTextColor)
+        walkingText?.setTextColor(if (!isDriving) selectedTextColor else unselectedTextColor)
+    }
+
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressedDispatcher.onBackPressed()
+        return true
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
         mMap.addMarker(MarkerOptions().position(lokasiDosen).title("Lokasi Dosen"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lokasiDosen, 16f))
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lokasiDosen, 16f))
 
-        // Arahkan dari lokasi pengguna ke lokasi dosen
         showLoading("Mengambil Lokasi anda")
         getMyLocation { myLocation ->
-            getDirections(myLocation, lokasiDosen)
+            hideLoading()
+//            getDirections(myLocation, lokasiDosen)
         }
     }
 
@@ -71,15 +133,27 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 this, Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                1
+            )
             return
         }
 
         fusedLocationProvider.lastLocation.addOnSuccessListener {
             if (it != null) {
-                val myLatLng = LatLng(it.latitude, it.longitude)
-                mMap.addMarker(MarkerOptions().position(myLatLng).title("Lokasi Saya"))
-                callback(myLatLng)
+                myLatLng = LatLng(it.latitude, it.longitude)
+                val icon = getBitmapDescriptor(this, R.drawable.ic_circle_24)
+                mMap.addMarker(
+                    MarkerOptions()
+                        .position(myLatLng!!)
+                        .title("Lokasi Saya")
+                        .icon(icon)
+                )
+                callback(myLatLng!!)
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLatLng!!, 16f))
+
             }
         }
     }
@@ -89,6 +163,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         val url = "https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=${origin.latitude},${origin.longitude}" +
                 "&destination=${destination.latitude},${destination.longitude}" +
+                "&mode=$travelMode" +
                 "&key=$apiKey"
 
         val request = Request.Builder().url(url).build()
@@ -98,7 +173,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             override fun onFailure(call: Call, e: IOException) {
                 hideLoading()
                 showToast(e.message)
-                Log.d("getDirections ","--> ${e.message}")
+                Log.d("getDirections ", "--> ${e.message}")
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -111,6 +186,8 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                         .getJSONObject(0)
 
                     val durationText = leg.getJSONObject("duration").getString("text")
+                    val distanceText = leg.getJSONObject("distance").getString("text")
+
 
                     val steps = leg.getJSONArray("steps")
                     val path = mutableListOf<LatLng>()
@@ -131,11 +208,29 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                         )
 
                         // Tampilkan estimasi waktu sampai
-                        binding.tvDuration.text = "Perkiraan waktu tiba: $durationText"
+                        binding.tvEstTime.text = durationText
+                        binding.tvDistance.text =distanceText
                         hideLoading()
                     }
                 }
             }
         })
     }
+    fun getBitmapDescriptor(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
+        val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)!!
+        vectorDrawable.setBounds(
+            0, 0,
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight
+        )
+        val bitmap = Bitmap.createBitmap(
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        vectorDrawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
 }
