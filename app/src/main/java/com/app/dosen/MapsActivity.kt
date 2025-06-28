@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.ImageView
@@ -34,39 +35,34 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
     private lateinit var binding: ActivityMapsBinding
     private lateinit var mMap: GoogleMap
     private var myLatLng: LatLng? = null
+    private var myMarker: Marker? = null
+    private var travelMode: String = "driving"
     private var lokasiDosen = LatLng(-6.9932, 110.4230)
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
-    private var travelMode: String = "driving"
-    private var currentPolyline: Polyline? = null
-
-    private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+
     private lateinit var textToSpeech: TextToSpeech
-    private var lastInstructionIndex = 0
-    private var instructions: List<String> = listOf()
-    private var stepTargets: List<LatLng> = listOf()
-    private var maneuvers: List<String> = listOf()
+    private var instructions = listOf<String>()
+    private var stepTargets = listOf<LatLng>()
+    private var maneuvers = listOf<String>()
+    private var polylinePoints = listOf<LatLng>()
+    private var currentStepIndex = 0
+    private var hasSpokenAdvance = false
+    private var currentPolyline: Polyline? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val bundle = intent.extras
-        val dosen: DosenModel? = bundle?.getParcelable("data")
-        dosen?.let {
-            lokasiDosen = LatLng(it.lat, it.long)
-        }
-
+        val dosen = intent.extras?.getParcelable<DosenModel>("data")
+        dosen?.let { lokasiDosen = LatLng(it.lat, it.long) }
+        binding.tvDestination.text="${dosen?.namaGedung}, ${dosen?.lantaiRuangan}"
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         fusedLocationProvider = LocationServices.getFusedLocationProviderClient(this)
-
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        binding.tvDestination.text = "${dosen?.namaGedung}, ${dosen?.lantaiRuangan}"
-
         textToSpeech = TextToSpeech(this) {
             if (it == TextToSpeech.SUCCESS) {
                 textToSpeech.language = Locale("id", "ID")
@@ -74,8 +70,8 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         }
 
         locationRequest = LocationRequest.create().apply {
-            interval = 5000
-            fastestInterval = 3000
+            interval = 3000
+            fastestInterval = 2000
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
 
@@ -98,9 +94,9 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         binding.cvCancel.setOnClickListener { finish() }
 
         binding.cvNavigation.setOnClickListener {
-            if (myLatLng != null) {
+            myLatLng?.let {
                 showLoading("Mengambil Rute...")
-                getDirections(myLatLng!!, lokasiDosen)
+                getDirections(it, lokasiDosen)
             }
         }
     }
@@ -128,176 +124,152 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.addMarker(MarkerOptions().position(lokasiDosen).title("Lokasi Dosen"))
-        showLoading("Mengambil Lokasi anda")
-        getMyLocation { hideLoading() }
+        getMyLocation { mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 16f)) }
     }
 
     private fun getMyLocation(callback: (LatLng) -> Unit) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
+            != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
             return
         }
-
         fusedLocationProvider.lastLocation.addOnSuccessListener {
-            if (it != null) {
+            it?.let {
                 myLatLng = LatLng(it.latitude, it.longitude)
                 val icon = getBitmapDescriptor(this, R.drawable.ic_circle_24)
-                mMap.addMarker(MarkerOptions().position(myLatLng!!).title("Lokasi Saya").icon(icon))
+                myMarker = mMap.addMarker(MarkerOptions().position(myLatLng!!).icon(icon))
                 callback(myLatLng!!)
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLatLng!!, 16f))
             }
         }
     }
 
     private fun getDirections(origin: LatLng, destination: LatLng) {
         val apiKey = "AIzaSyBB7uJxN6nrrQk8Bh8OvaNaexjfyBpZGow"
-        val url = "https://maps.googleapis.com/maps/api/directions/json?" +
-                "origin=${origin.latitude},${origin.longitude}" +
-                "&destination=${destination.latitude},${destination.longitude}" +
-                "&mode=$travelMode" +
-                "&language=id" +
-                "&key=$apiKey"
-
-        val request = Request.Builder().url(url).build()
-        val client = OkHttpClient()
-
-        client.newCall(request).enqueue(object : Callback {
+        val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&mode=driving&language=id&key=$apiKey"
+        OkHttpClient().newCall(Request.Builder().url(url).build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                hideLoading()
-                showToast(e.message)
-                Log.d("getDirections", "--> ${e.message}")
+                runOnUiThread { hideLoading(); showToast(e.message) }
             }
-
             override fun onResponse(call: Call, response: Response) {
                 val json = JSONObject(response.body?.string() ?: "")
-                val routes = json.getJSONArray("routes")
+                val steps = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0).getJSONArray("steps")
+                val instrList = mutableListOf<String>()
+                val stepList = mutableListOf<LatLng>()
+                val maneuverList = mutableListOf<String>()
+                val polyline = mutableListOf<LatLng>()
 
-                if (routes.length() > 0) {
-                    val leg = routes.getJSONObject(0).getJSONArray("legs").getJSONObject(0)
-                    val durationText = leg.getJSONObject("duration").getString("text")
-                    val distanceText = leg.getJSONObject("distance").getString("text")
-                    val steps = leg.getJSONArray("steps")
+                for (i in 0 until steps.length()) {
+                    val step = steps.getJSONObject(i)
+                    instrList.add(step.getString("html_instructions").replace(Regex("<.*?>"), ""))
+                    val end = step.getJSONObject("end_location")
+                    stepList.add(LatLng(end.getDouble("lat"), end.getDouble("lng")))
+                    maneuverList.add(step.optString("maneuver", "straight"))
+                    polyline.addAll(PolyUtil.decode(step.getJSONObject("polyline").getString("points")))
+                }
 
-                    val path = mutableListOf<LatLng>()
-                    val instrList = mutableListOf<String>()
-                    val stepList = mutableListOf<LatLng>()
-                    val maneuverList = mutableListOf<String>()
+                instructions = instrList
+                stepTargets = stepList
+                maneuvers = maneuverList
+                polylinePoints = polyline
+                currentStepIndex = 0
+                hasSpokenAdvance = false
 
-                    for (i in 0 until steps.length()) {
-                        val step = steps.getJSONObject(i)
-                        val polyline = step.getJSONObject("polyline").getString("points")
-                        path.addAll(PolyUtil.decode(polyline))
-
-                        val instruction = step.getString("html_instructions").replace(Regex("<.*?>"), "")
-                        instrList.add(instruction)
-
-                        val endLoc = step.getJSONObject("end_location")
-                        stepList.add(LatLng(endLoc.getDouble("lat"), endLoc.getDouble("lng")))
-
-                        maneuverList.add(step.optString("maneuver", "straight"))
-                    }
-
-                    instructions = instrList
-                    stepTargets = stepList
-                    maneuvers = maneuverList
-                    lastInstructionIndex = 0
-
-                    runOnUiThread {
-                        currentPolyline?.remove()
-                        currentPolyline = mMap.addPolyline(
-                            PolylineOptions().addAll(path).color(Color.BLUE).width(10f)
-                        )
-                        binding.tvEstTime.text = durationText
-                        binding.tvDistance.text = distanceText
-
-                        startRealTimeTracking()
-                        hideLoading()
-                    }
+                runOnUiThread {
+                    currentPolyline?.remove()
+                    currentPolyline = mMap.addPolyline(PolylineOptions().addAll(polyline).color(Color.BLUE).width(10f))
+                    hideLoading()
+                    startTracking()
                 }
             }
         })
     }
 
-    private fun startRealTimeTracking() {
+    private fun startTracking() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
-        ) return
+            != PackageManager.PERMISSION_GRANTED) return
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                val location = result.lastLocation ?: return
-                myLatLng = LatLng(location.latitude, location.longitude)
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(myLatLng!!))
-
-                if (lastInstructionIndex < instructions.size && myLatLng != null) {
-                    val target = stepTargets[lastInstructionIndex]
-                    val distance = distanceBetween(myLatLng!!, target)
-
-                    if (distance < 30) {
-                        val text = instructions[lastInstructionIndex]
-                        val maneuver = maneuvers[lastInstructionIndex]
-                        updateStepInstructionUI(text, maneuver)
-                        speakInstruction(text)
-                        lastInstructionIndex++
-                    }
+                val loc = result.lastLocation ?: return
+                val newLatLng = LatLng(loc.latitude, loc.longitude)
+                myLatLng = newLatLng
+                if (myMarker == null) {
+                    val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
+                    myMarker = mMap.addMarker(
+                        MarkerOptions().position(myLatLng!!).title("Lokasi Saya").icon(icon)
+                    )
+                } else {
+                    myMarker?.position = myLatLng!!
                 }
+                mMap.animateCamera(CameraUpdateFactory.newLatLng(myLatLng!!))
+
+                if (currentStepIndex < stepTargets.size) {
+                    val distanceToStep = distanceBetween(newLatLng, stepTargets[currentStepIndex])
+
+                    // Advance warning 100m sebelum belok
+                    if (!hasSpokenAdvance && distanceToStep < 100) {
+                        speak("Dalam 100 meter, ${instructions[currentStepIndex]}")
+                        hasSpokenAdvance = true
+                    }
+
+                    // Cek apakah sudah melewati beberapa step sekaligus
+                    while (currentStepIndex < stepTargets.size &&
+                        distanceBetween(newLatLng, stepTargets[currentStepIndex]) < 30) {
+
+                        speak(instructions[currentStepIndex])
+                        updateStepUI(instructions[currentStepIndex], maneuvers[currentStepIndex])
+                        currentStepIndex++
+                        hasSpokenAdvance = false
+                    }
+
+                } else {
+                    // Jika semua step sudah dilewati → tujuan tercapai
+                    speak("Anda telah sampai di tujuan.")
+                    binding.tvRealtimeInstruction.text = "Tujuan telah dicapai"
+                    binding.imgRealtimeIcon.setImageResource(R.drawable.ic_check_circle_24)
+                    binding.realtimeInstructionLayout.showView()
+                    fusedLocationProvider.removeLocationUpdates(locationCallback)
+                }
+
             }
         }
-
-        fusedLocationProvider.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
+        fusedLocationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
-    private fun updateStepInstructionUI(text: String, maneuver: String) {
-        binding.realtimeInstructionLayout.showView()
+    private fun updateStepUI(text: String, maneuver: String) {
         binding.tvRealtimeInstruction.text = text
-
-        val iconRes = when (maneuver) {
+        binding.realtimeInstructionLayout.showView()
+        val icon = when (maneuver) {
             "turn-left" -> R.drawable.ic_turn_left
             "turn-right" -> R.drawable.ic_turn_right
             "uturn-left", "uturn-right" -> R.drawable.ic_uturn
-            "fork-left" -> R.drawable.ic_turn_left
-            "fork-right" -> R.drawable.ic_turn_left
-            "straight" -> R.drawable.ic_direction_straight
             else -> R.drawable.ic_direction_straight
         }
-        binding.imgRealtimeIcon.setImageResource(iconRes)
+        binding.imgRealtimeIcon.setImageResource(icon)
     }
 
-    private fun speakInstruction(text: String) {
+    private fun speak(text: String) {
         textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
     }
 
     private fun distanceBetween(a: LatLng, b: LatLng): Float {
         val result = FloatArray(1)
-        android.location.Location.distanceBetween(
-            a.latitude, a.longitude, b.latitude, b.longitude, result
-        )
+        android.location.Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, result)
         return result[0]
     }
 
     fun getBitmapDescriptor(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
-        val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)!!
-        vectorDrawable.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
-        val bitmap = Bitmap.createBitmap(
-            vectorDrawable.intrinsicWidth,
-            vectorDrawable.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        )
+        val drawable = ContextCompat.getDrawable(context, vectorResId)!!
+        drawable.setBounds(0, 0, drawable.intrinsicWidth, drawable.intrinsicHeight)
+        val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        vectorDrawable.draw(canvas)
+        drawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (::textToSpeech.isInitialized) {
-            textToSpeech.stop()
-            textToSpeech.shutdown()
-        }
-        if (::locationCallback.isInitialized) {
-            fusedLocationProvider.removeLocationUpdates(locationCallback)
-        }
+        if (::textToSpeech.isInitialized) textToSpeech.shutdown()
+        if (::locationCallback.isInitialized) fusedLocationProvider.removeLocationUpdates(locationCallback)
     }
 }
