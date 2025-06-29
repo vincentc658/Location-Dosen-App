@@ -6,6 +6,10 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -51,12 +55,13 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
     private var currentStepIndex = 0
     private var hasSpokenAdvance = false
     private var currentPolyline: Polyline? = null
-
+    private lateinit var sensorManager: SensorManager
+    private var currentAzimuth: Float = 0f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val dosen = intent.extras?.getParcelable<DosenModel>("data")
         dosen?.let { lokasiDosen = LatLng(it.lat, it.long) }
         binding.tvDestination.text="${dosen?.namaGedung}, ${dosen?.lantaiRuangan}"
@@ -70,11 +75,13 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             }
         }
 
-        locationRequest = LocationRequest.create().apply {
-            interval = 3000
-            fastestInterval = 2000
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
+        locationRequest = LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY, // intervalMillis
+            2000L // interval dalam ms
+        ).apply {
+            setMinUpdateIntervalMillis(2000L) // fastestInterval
+        }.build()
+
 
         binding.llDriving.setOnClickListener {
             if (myLatLng == null) return@setOnClickListener
@@ -100,6 +107,32 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 getDirections(it, lokasiDosen, true)
             }
         }
+    }
+    private val sensorListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent?) {
+            if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
+                val rotationMatrix = FloatArray(9)
+                SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+                val orientation = FloatArray(3)
+                SensorManager.getOrientation(rotationMatrix, orientation)
+                currentAzimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    }
+    override fun onResume() {
+        super.onResume()
+        sensorManager.registerListener(
+            sensorListener,
+            sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+            SensorManager.SENSOR_DELAY_UI
+        )
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(sensorListener)
     }
     private fun startFakeGPS(){
         val fakeLocations = listOf(
@@ -146,27 +179,28 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             .target(newLatLng)
             .zoom(18f)
             .tilt(60f)
-            .bearing(bearing)
+            .bearing(currentAzimuth)
             .build()
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-        myLatLng = latLng
 
+        myLatLng = newLatLng
         if (myMarker == null) {
             val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
             myMarker = mMap.addMarker(
-                MarkerOptions().position(myLatLng!!).title("Lokasi Saya").icon(icon)
+                MarkerOptions().position(newLatLng).icon(icon)
+                    .anchor(0.5f, 0.5f).flat(true).rotation(currentAzimuth)
             )
         } else {
-            myMarker?.position = myLatLng!!
+            myMarker?.position = newLatLng
+            myMarker?.rotation = currentAzimuth
         }
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(myLatLng!!))
 
         if (currentStepIndex < stepTargets.size) {
             val distanceToStep = distanceBetween(latLng, stepTargets[currentStepIndex])
 
             // Advance warning 100m sebelum belok
             if (!hasSpokenAdvance && distanceToStep < 100) {
-                speak("Dalam 100 meter, ${instructions[currentStepIndex]}")
+//                speak("Dalam 100 meter, ${instructions[currentStepIndex]}")
                 hasSpokenAdvance = true
             }
 
@@ -174,7 +208,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             while (currentStepIndex < stepTargets.size &&
                 distanceBetween(latLng, stepTargets[currentStepIndex]) < 30) {
                 if (currentStepIndex + 1 < instructions.size) {
-                    speak(instructions[currentStepIndex+1])
+//                    speak(instructions[currentStepIndex+1])
                     updateStepUI(instructions[currentStepIndex+1], maneuvers[currentStepIndex+1])
                 }
                 currentStepIndex++
@@ -183,7 +217,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
 
         } else {
             // Jika semua step sudah dilewati → tujuan tercapai
-            speak("Anda telah sampai di tujuan.")
+//            speak("Anda telah sampai di tujuan.")
             binding.tvRealtimeInstruction.text = "Tujuan telah dicapai"
             binding.imgRealtimeIcon.setImageResource(R.drawable.ic_check_circle_24)
             binding.realtimeInstructionLayout.showView()
@@ -287,8 +321,8 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                         currentPolyline = mMap.addPolyline(
                             PolylineOptions().addAll(polyline).color(Color.BLUE).width(10f)
                         )
-                        startFakeGPS()
-//                    startTracking()
+//                        startFakeGPS()
+                    startTracking()
                     }
                     hideLoading()
 
@@ -306,24 +340,25 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 val loc = result.lastLocation ?: return
                 val newLatLng = LatLng(loc.latitude, loc.longitude)
 
-                val bearing = bearingBetween(myLatLng ?: newLatLng, newLatLng) // jika myLatLng null, fallback ke newLatLng
-                val cameraPosition = CameraPosition.Builder()
-                    .target(newLatLng)
-                    .zoom(18f)
-                    .tilt(60f)
-                    .bearing(bearing)
-                    .build()
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+                    val cameraPosition = CameraPosition.Builder()
+                        .target(newLatLng)
+                        .zoom(18f)
+                        .tilt(60f)
+                        .bearing(currentAzimuth)
+                        .build()
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-                myLatLng = newLatLng
-                if (myMarker == null) {
-                    val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
-                    myMarker = mMap.addMarker(
-                        MarkerOptions().position(myLatLng!!).title("Lokasi Saya").icon(icon)
-                    )
-                } else {
-                    myMarker?.position = myLatLng!!
-                }
+                    myLatLng = newLatLng
+                    if (myMarker == null) {
+                        val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
+                        myMarker = mMap.addMarker(
+                            MarkerOptions().position(newLatLng).icon(icon)
+                                .anchor(0.5f, 0.5f).flat(true).rotation(currentAzimuth)
+                        )
+                    } else {
+                        myMarker?.position = newLatLng
+                        myMarker?.rotation = currentAzimuth
+                    }
 
 
                 if (currentStepIndex < stepTargets.size) {
@@ -331,7 +366,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
 
                     // Advance warning 100m sebelum belok
                     if (!hasSpokenAdvance && distanceToStep < 100) {
-                        speak("Dalam 100 meter, ${instructions[currentStepIndex]}")
+//                        speak("Dalam 100 meter, ${instructions[currentStepIndex]}")
                         hasSpokenAdvance = true
                     }
 
@@ -339,7 +374,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                     while (currentStepIndex < stepTargets.size &&
                         distanceBetween(newLatLng, stepTargets[currentStepIndex]) < 30) {
 
-                        speak(instructions[currentStepIndex])
+//                        speak(instructions[currentStepIndex])
                         updateStepUI(instructions[currentStepIndex], maneuvers[currentStepIndex])
                         currentStepIndex++
                         hasSpokenAdvance = false
@@ -347,7 +382,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
 
                 } else {
                     // Jika semua step sudah dilewati → tujuan tercapai
-                    speak("Anda telah sampai di tujuan.")
+//                    speak("Anda telah sampai di tujuan.")
                     binding.tvRealtimeInstruction.text = "Tujuan telah dicapai"
                     binding.imgRealtimeIcon.setImageResource(R.drawable.ic_check_circle_24)
                     binding.realtimeInstructionLayout.showView()
