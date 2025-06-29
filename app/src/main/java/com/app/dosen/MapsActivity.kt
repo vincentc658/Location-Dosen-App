@@ -11,11 +11,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
-import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
-import android.util.Log
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.core.app.ActivityCompat
@@ -134,97 +131,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         super.onPause()
         sensorManager.unregisterListener(sensorListener)
     }
-    private fun startFakeGPS(){
-        val fakeLocations = listOf(
-            LatLng(3.521098, 98.795321),
-            LatLng(3.521115, 98.795293),
-            LatLng(3.521125, 98.795266),
-            LatLng(3.521139, 98.795243),
-            LatLng(3.521119, 98.795229),
-            LatLng(3.521095, 98.795216),
-            LatLng(3.521081, 98.795212),
-            LatLng(3.521064, 98.795199),
-            LatLng(3.521022, 98.795175),
-            LatLng(3.520975, 98.795151),
-            LatLng(3.520936, 98.795120),
-            LatLng(3.520903, 98.795106),
-            LatLng(3.520869, 98.795079),
-            LatLng(3.520826, 98.795062),
-            LatLng(3.520771, 98.795033),
-            LatLng(3.519984, 98.794546),
-            LatLng(3.519445, 98.794224),
-            LatLng(3.519141, 98.794048),
-            LatLng(3.518988, 98.793932),
-            LatLng(3.518882, 98.793797),
-            LatLng(3.518858, 98.793753),
-            LatLng(3.518881, 98.793718),
-        )
 
-        var fakeIndex = 0
-        Handler(Looper.getMainLooper()).postDelayed(object : Runnable {
-            override fun run() {
-                if (fakeIndex < fakeLocations.size) {
-                    val fakeLoc = fakeLocations[fakeIndex++]
-                    onFakeLocationUpdate(fakeLoc)
-                    Handler(Looper.getMainLooper()).postDelayed(this, 2000)
-                }
-            }
-        }, 2000)
-    }
-    fun onFakeLocationUpdate(latLng: LatLng) {
-        val newLatLng = latLng
-
-        val bearing = bearingBetween(myLatLng ?: newLatLng, newLatLng) // jika myLatLng null, fallback ke newLatLng
-        val cameraPosition = CameraPosition.Builder()
-            .target(newLatLng)
-            .zoom(18f)
-            .tilt(60f)
-            .bearing(currentAzimuth)
-            .build()
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-
-        myLatLng = newLatLng
-        if (myMarker == null) {
-            val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
-            myMarker = mMap.addMarker(
-                MarkerOptions().position(newLatLng).icon(icon)
-                    .anchor(0.5f, 0.5f).flat(true).rotation(currentAzimuth)
-            )
-        } else {
-            myMarker?.position = newLatLng
-            myMarker?.rotation = currentAzimuth
-        }
-
-        if (currentStepIndex < stepTargets.size) {
-            val distanceToStep = distanceBetween(latLng, stepTargets[currentStepIndex])
-
-            // Advance warning 100m sebelum belok
-            if (!hasSpokenAdvance && distanceToStep < 100) {
-//                speak("Dalam 100 meter, ${instructions[currentStepIndex]}")
-                hasSpokenAdvance = true
-            }
-
-            // Cek apakah sudah melewati beberapa step sekaligus
-            while (currentStepIndex < stepTargets.size &&
-                distanceBetween(latLng, stepTargets[currentStepIndex]) < 30) {
-                if (currentStepIndex + 1 < instructions.size) {
-//                    speak(instructions[currentStepIndex+1])
-                    updateStepUI(instructions[currentStepIndex+1], maneuvers[currentStepIndex+1])
-                }
-                currentStepIndex++
-                hasSpokenAdvance = false
-            }
-
-        } else {
-            // Jika semua step sudah dilewati → tujuan tercapai
-//            speak("Anda telah sampai di tujuan.")
-            binding.tvRealtimeInstruction.text = "Tujuan telah dicapai"
-            binding.imgRealtimeIcon.setImageResource(R.drawable.ic_check_circle_24)
-            binding.realtimeInstructionLayout.showView()
-            fusedLocationProvider.removeLocationUpdates(locationCallback)
-        }
-
-    }
 
     private fun highlightSelectedMode(isDriving: Boolean) {
         val selectedBg = R.drawable.bg_white_border_navy
@@ -363,24 +270,23 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
 
                 if (currentStepIndex < stepTargets.size) {
                     val distanceToStep = distanceBetween(newLatLng, stepTargets[currentStepIndex])
+                    val maneuver = maneuvers[currentStepIndex]
+                    val isTurn = maneuver.contains("turn") || maneuver.contains("uturn")
 
-                    // Advance warning 100m sebelum belok
-                    if (!hasSpokenAdvance && distanceToStep < 100) {
-//                        speak("Dalam 100 meter, ${instructions[currentStepIndex]}")
+                    // Advance warning: update UI 100m sebelum belok
+                    if (!hasSpokenAdvance && distanceToStep in 50.0..100.0 && isTurn) {
+                        updateStepUI("Dalam ${distanceToStep.toInt()} meter, ${instructions[currentStepIndex]}", maneuver)
                         hasSpokenAdvance = true
                     }
 
-                    // Cek apakah sudah melewati beberapa step sekaligus
-                    while (currentStepIndex < stepTargets.size &&
-                        distanceBetween(newLatLng, stepTargets[currentStepIndex]) < 30) {
-
-//                        speak(instructions[currentStepIndex])
-                        updateStepUI(instructions[currentStepIndex], maneuvers[currentStepIndex])
+                    // Eksekusi step ketika dekat dengan titik belok
+                    if (distanceToStep < 30) {
+                        updateStepUI(instructions[currentStepIndex], maneuver)
                         currentStepIndex++
                         hasSpokenAdvance = false
                     }
-
-                } else {
+                }
+                else {
                     // Jika semua step sudah dilewati → tujuan tercapai
 //                    speak("Anda telah sampai di tujuan.")
                     binding.tvRealtimeInstruction.text = "Tujuan telah dicapai"
@@ -406,9 +312,6 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         binding.imgRealtimeIcon.setImageResource(icon)
     }
 
-    private fun speak(text: String) {
-        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-    }
 
     private fun distanceBetween(a: LatLng, b: LatLng): Float {
         val result = FloatArray(1)
