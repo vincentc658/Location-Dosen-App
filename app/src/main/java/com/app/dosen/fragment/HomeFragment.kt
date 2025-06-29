@@ -20,10 +20,9 @@ import com.app.dosen.databinding.FragmentHomeBinding
 import com.app.dosen.databinding.ItemProdiCircleBinding
 import com.app.dosen.model.DosenModel
 import com.app.dosen.model.MenuItem
+import com.app.dosen.util.BaseAppCompat
 import com.app.dosen.util.BaseFragment
-import com.app.dosen.util.BaseView
 import com.google.firebase.firestore.FirebaseFirestore
-
 class HomeFragment : BaseFragment() {
 
     private var _binding: FragmentHomeBinding? = null
@@ -36,27 +35,35 @@ class HomeFragment : BaseFragment() {
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
 
-
-
+        // Inisialisasi tampilan menu (grid prodi dengan paging)
         setupMenuPager()
+        // Inisialisasi daftar dosen (RecyclerView vertikal)
         setupRecyclerView()
+
         return binding.root
     }
 
     private fun setupRecyclerView() {
+        // Gunakan layout vertikal
         binding.recyclerDosen.layoutManager = LinearLayoutManager(requireContext())
+
+        // Adapter untuk daftar dosen, dengan klik item menuju RuangKerjaActivity
         dosenAdapter = DosenAdapter(emptyList()) { dosen ->
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)
             goToPage(RuangKerjaActivity::class.java, bundle)
         }
         binding.recyclerDosen.adapter = dosenAdapter
-        (requireActivity() as BaseView).showLoading("")
-        // Ambil data dari Firestore
+
+        // Tampilkan loading saat ambil data
+        (requireActivity() as BaseAppCompat).showLoading("")
+
+        // Ambil data dosen dari Firestore
         FirebaseFirestore.getInstance()
             .collection("dosen")
             .get()
             .addOnSuccessListener { result ->
+                // Parsing tiap dokumen menjadi DosenModel
                 val dosenList = result.mapNotNull { doc ->
                     try {
                         DosenModel(
@@ -72,19 +79,22 @@ class HomeFragment : BaseFragment() {
                             fotoRuangan = doc.getString("fotoRuangan") ?: ""
                         )
                     } catch (e: Exception) {
-                        null
+                        null // Lewati jika parsing gagal
                     }
                 }
+
+                // Update data ke adapter
                 dosenAdapter.updateData(dosenList)
-                (requireActivity() as BaseView).hideLoading()
+                (requireActivity() as BaseAppCompat).hideLoading()
             }
             .addOnFailureListener {
-                (requireActivity() as BaseView).hideLoading()
+                (requireActivity() as BaseAppCompat).hideLoading()
                 Toast.makeText(requireContext(), "Gagal memuat data dosen", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun setupMenuPager() {
+        // Daftar semua menu program studi
         val allMenus = listOf(
             MenuItem(R.drawable.ic_ptb, "Pendidikan Teknik Bangunan", "PTB"),
             MenuItem(R.drawable.ic_teksip, "Teknik Sipil", "Teksip"),
@@ -103,22 +113,25 @@ class HomeFragment : BaseFragment() {
             MenuItem(R.drawable.ic_tekim, "Teknik Kimia", "Tekim")
         )
 
-        // Split ke dalam page 8 item per halaman
+        // Bagi menu menjadi beberapa halaman, 8 item per halaman
         val pages = allMenus.chunked(8)
 
+        // Buat adapter ViewPager (satu halaman = satu grid menu)
         val pagerAdapter = MenuPagerAdapter(requireContext(), pages) { selectedMenu ->
+            // Saat menu dipilih, buka SearchActivity dan kirim label prodi
             val bundle = Bundle()
             bundle.putString("prodi", selectedMenu.label)
             goToPage(SearchActivity::class.java, bundle)
         }
 
+        // Pasang adapter ke ViewPager dan hubungkan dengan dotsIndicator
         binding.viewPagerMenu.adapter = pagerAdapter
         binding.dotsIndicator.setViewPager2(binding.viewPagerMenu)
     }
 
-
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null // Hindari memory leak
     }
 }
+

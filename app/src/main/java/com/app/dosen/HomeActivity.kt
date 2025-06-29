@@ -6,9 +6,9 @@ import com.app.dosen.databinding.ActivityHomeBinding
 import com.app.dosen.fragment.AboutUsFragment
 import com.app.dosen.fragment.HomeFragment
 import com.app.dosen.fragment.SearchFragment
-import com.app.dosen.util.BaseView
+import com.app.dosen.util.BaseAppCompat
 
-class HomeActivity : BaseView() {
+class HomeActivity : BaseAppCompat() {
     private lateinit var binding: ActivityHomeBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

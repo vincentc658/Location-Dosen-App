@@ -18,13 +18,15 @@ import com.app.dosen.databinding.FragmentSearchBinding
 import com.app.dosen.model.DosenModel
 import com.app.dosen.util.BaseFragment
 import com.google.firebase.firestore.FirebaseFirestore
-
 class SearchFragment : BaseFragment() {
 
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
 
+    // Adapter untuk RecyclerView dosen
     private lateinit var adapter: DosenAdapter
+
+    // Data penuh dari Firestore sebelum difilter
     private var fullList: List<DosenModel> = emptyList()
 
     override fun onCreateView(
@@ -38,12 +40,13 @@ class SearchFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupSpinner()
-        setupRecyclerView()
-        setupSearchFilter()
-        loadDataFromFirestore()
+        setupSpinner()        // Atur isi spinner Prodi
+        setupRecyclerView()   // Atur daftar RecyclerView dosen
+        setupSearchFilter()   // Atur listener pencarian & spinner
+        loadDataFromFirestore() // Ambil data dari Firestore
     }
 
+    // Isi spinner program studi
     private fun setupSpinner() {
         val prodiList = listOf(
             "Semua",
@@ -63,13 +66,16 @@ class SearchFragment : BaseFragment() {
             "Pendidikan Tata Kecantikan",
             "Teknik Kimia"
         )
-        val spinnerAdapter = ArrayAdapter(requireContext(), R.layout.simple_spinner_item, prodiList)
+        // Gunakan adapter standar bawaan Android
+        val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, prodiList)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerProdi.adapter = spinnerAdapter
     }
 
+    // Inisialisasi RecyclerView untuk daftar dosen
     private fun setupRecyclerView() {
         adapter = DosenAdapter(emptyList()) { dosen ->
+            // Jika item diklik, kirim data ke RuangKerjaActivity
             val bundle = Bundle()
             bundle.putParcelable("data", dosen)
             goToPage(RuangKerjaActivity::class.java, bundle)
@@ -78,6 +84,7 @@ class SearchFragment : BaseFragment() {
         binding.recyclerDosen.adapter = adapter
     }
 
+    // Ambil semua data dosen dari Firestore dan simpan di fullList
     private fun loadDataFromFirestore() {
         FirebaseFirestore.getInstance().collection("dosen")
             .get()
@@ -101,15 +108,16 @@ class SearchFragment : BaseFragment() {
                     }
                 }
 
-                // Cek apakah fragment masih attached ke activity dan view belum dihancurkan
+                // Pastikan fragment masih hidup sebelum update UI
                 if (isAdded && _binding != null) {
                     filterData()
                 }
             }
-
     }
 
+    // Atur filter berdasarkan pencarian nama dan spinner prodi
     private fun setupSearchFilter() {
+        // Listener untuk input teks (nama dosen)
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -118,6 +126,7 @@ class SearchFragment : BaseFragment() {
             }
         })
 
+        // Listener untuk perubahan pilihan spinner
         binding.spinnerProdi.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>, view: View, position: Int, id: Long
@@ -129,6 +138,7 @@ class SearchFragment : BaseFragment() {
         }
     }
 
+    // Lakukan filter data berdasarkan nama dan prodi yang dipilih
     private fun filterData() {
         val query = binding.etSearch.text.toString().trim().lowercase()
         val selectedProdi = binding.spinnerProdi.selectedItem.toString()
@@ -147,3 +157,4 @@ class SearchFragment : BaseFragment() {
         _binding = null
     }
 }
+
