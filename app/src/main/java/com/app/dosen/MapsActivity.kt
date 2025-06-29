@@ -81,7 +81,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             travelMode = "driving"
             binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(true)
-//            getDirections(myLatLng!!, lokasiDosen)
+            getDirections(myLatLng!!, lokasiDosen, false)
         }
 
         binding.llWalking.setOnClickListener {
@@ -89,7 +89,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             travelMode = "walking"
             binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(false)
-//            getDirections(myLatLng!!, lokasiDosen)
+            getDirections(myLatLng!!, lokasiDosen, false)
         }
 
         binding.cvCancel.setOnClickListener { finish() }
@@ -97,7 +97,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         binding.cvNavigation.setOnClickListener {
             myLatLng?.let {
                 showLoading("Mengambil Rute...")
-                getDirections(it, lokasiDosen)
+                getDirections(it, lokasiDosen, true)
             }
         }
     }
@@ -139,7 +139,18 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         }, 2000)
     }
     fun onFakeLocationUpdate(latLng: LatLng) {
+        val newLatLng = latLng
+
+        val bearing = bearingBetween(myLatLng ?: newLatLng, newLatLng) // jika myLatLng null, fallback ke newLatLng
+        val cameraPosition = CameraPosition.Builder()
+            .target(newLatLng)
+            .zoom(18f)
+            .tilt(60f)
+            .bearing(bearing)
+            .build()
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
         myLatLng = latLng
+
         if (myMarker == null) {
             val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
             myMarker = mMap.addMarker(
@@ -204,7 +215,11 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.addMarker(MarkerOptions().position(lokasiDosen).title("Lokasi Dosen"))
-        getMyLocation { mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 16f)) }
+        showLoading("Mengambil Lokasi Anda")
+        getMyLocation {
+            hideLoading()
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 16f)) }
+
     }
 
     private fun getMyLocation(callback: (LatLng) -> Unit) {
@@ -219,25 +234,35 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 val icon = getBitmapDescriptor(this, R.drawable.ic_circle_24)
                 myMarker = mMap.addMarker(MarkerOptions().position(myLatLng!!).icon(icon))
                 callback(myLatLng!!)
+                highlightSelectedMode(true)
+                getDirections(myLatLng!!, lokasiDosen, false)
             }
         }
     }
 
-    private fun getDirections(origin: LatLng, destination: LatLng) {
+    private fun getDirections(origin: LatLng, destination: LatLng, isShowRoute: Boolean) {
         val apiKey = "AIzaSyBB7uJxN6nrrQk8Bh8OvaNaexjfyBpZGow"
-        val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&mode=driving&language=id&key=$apiKey"
+        val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&mode=${travelMode}&language=id&key=$apiKey"
         OkHttpClient().newCall(Request.Builder().url(url).build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread { hideLoading(); showToast(e.message) }
             }
             override fun onResponse(call: Call, response: Response) {
+
                 val json = JSONObject(response.body?.string() ?: "")
                 val steps = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0).getJSONArray("steps")
                 val instrList = mutableListOf<String>()
                 val stepList = mutableListOf<LatLng>()
                 val maneuverList = mutableListOf<String>()
                 val polyline = mutableListOf<LatLng>()
-
+                val routes = json.getJSONArray("routes")
+                var durationText = ""
+                var distanceText=""
+                if (routes.length() > 0) {
+                    val leg = routes.getJSONObject(0).getJSONArray("legs").getJSONObject(0)
+                     durationText = leg.getJSONObject("duration").getString("text")
+                     distanceText = leg.getJSONObject("distance").getString("text")
+                }
                 for (i in 0 until steps.length()) {
                     val step = steps.getJSONObject(i)
                     instrList.add(step.getString("html_instructions").replace(Regex("<.*?>"), ""))
@@ -255,11 +280,18 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 hasSpokenAdvance = false
 
                 runOnUiThread {
+                    binding.tvEstTime.text = durationText
+                    binding.tvDistance.text = distanceText
                     currentPolyline?.remove()
-                    currentPolyline = mMap.addPolyline(PolylineOptions().addAll(polyline).color(Color.BLUE).width(10f))
+                    if(isShowRoute) {
+                        currentPolyline = mMap.addPolyline(
+                            PolylineOptions().addAll(polyline).color(Color.BLUE).width(10f)
+                        )
+                        startFakeGPS()
+//                    startTracking()
+                    }
                     hideLoading()
-//                    startFakeGPS()
-                    startTracking()
+
                 }
             }
         })
@@ -273,6 +305,16 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
             override fun onLocationResult(result: LocationResult) {
                 val loc = result.lastLocation ?: return
                 val newLatLng = LatLng(loc.latitude, loc.longitude)
+
+                val bearing = bearingBetween(myLatLng ?: newLatLng, newLatLng) // jika myLatLng null, fallback ke newLatLng
+                val cameraPosition = CameraPosition.Builder()
+                    .target(newLatLng)
+                    .zoom(18f)
+                    .tilt(60f)
+                    .bearing(bearing)
+                    .build()
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+
                 myLatLng = newLatLng
                 if (myMarker == null) {
                     val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
@@ -282,7 +324,7 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
                 } else {
                     myMarker?.position = myLatLng!!
                 }
-                mMap.animateCamera(CameraUpdateFactory.newLatLng(myLatLng!!))
+
 
                 if (currentStepIndex < stepTargets.size) {
                     val distanceToStep = distanceBetween(newLatLng, stepTargets[currentStepIndex])
@@ -353,4 +395,18 @@ class MapsActivity : BaseView(), OnMapReadyCallback {
         if (::textToSpeech.isInitialized) textToSpeech.shutdown()
         if (::locationCallback.isInitialized) fusedLocationProvider.removeLocationUpdates(locationCallback)
     }
+    private fun bearingBetween(start: LatLng, end: LatLng): Float {
+        val lat1 = Math.toRadians(start.latitude)
+        val lon1 = Math.toRadians(start.longitude)
+        val lat2 = Math.toRadians(end.latitude)
+        val lon2 = Math.toRadians(end.longitude)
+
+        val dLon = lon2 - lon1
+        val y = Math.sin(dLon) * Math.cos(lat2)
+        val x = Math.cos(lat1) * Math.sin(lat2) -
+                Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
+        val bearing = Math.toDegrees(Math.atan2(y, x))
+        return ((bearing + 360) % 360).toFloat()
+    }
+
 }

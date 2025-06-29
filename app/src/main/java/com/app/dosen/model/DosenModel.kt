@@ -28,15 +28,7 @@ data class DosenModel(
         }
     }
 
-    fun extractDriveFileId(image : String): String? {
-        val regex = Regex("https://drive\\.google\\.com/file/d/([a-zA-Z0-9_-]+)")
-        val matchResult = regex.find(image)
-        return matchResult?.groupValues?.get(1)
-    }
-    fun getImageProfileUrl(): String? {
-        val fileId = extractDriveFileId(fotoDosen)
-        return fileId?.let { "https://drive.google.com/uc?export=download&id=$it" }
-    }
+
     fun getImageRuangKerjaUrl(): String? {
         return convertGoogleDriveUrl(fotoRuangan)
     }

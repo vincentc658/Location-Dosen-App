@@ -245,8 +245,9 @@
                                 <ImageView
                                     android:gravity="center_vertical"
                                     android:layout_gravity="center_vertical"
-                                    android:src="@drawable/ic_navigation"
+                                    android:src="@drawable/ic_location"
                                     android:layout_width="@dimen/size_20"
+                                    app:tint="@color/white"
                                     android:layout_height="@dimen/size_20"/>
 
                                 <TextView
@@ -255,7 +256,7 @@
                                     android:layout_marginStart="@dimen/size_16"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Start Navigation"
+                                    android:text="Lokasi Dosen"
                                     android:textColor="@color/white" />
                             </LinearLayout>
 
