@@ -54,6 +54,11 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
     private var currentPolyline: Polyline? = null
     private lateinit var sensorManager: SensorManager
     private var currentAzimuth: Float = 0f
+
+    // Variabel untuk mengecek apakah sudah sampai tujuan
+    private var hasReachedDestination = false
+    private val destinationRadius = 5.0f // 5 meter radius untuk tujuan
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
@@ -248,6 +253,7 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                 polylinePoints = polyline
                 currentStepIndex = 0
                 hasSpokenAdvance = false
+                hasReachedDestination = false // Reset status tujuan
 
                 runOnUiThread {
                     binding.tvEstTime.text = durationText
@@ -300,8 +306,21 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                     myMarker?.rotation = currentAzimuth
                 }
 
-                // Cek apakah dekat dengan langkah navigasi berikutnya
-                if (currentStepIndex < stepTargets.size) {
+                // Cek jarak ke tujuan sebenarnya (koordinat lokasiDosen)
+                val distanceToDestination = distanceBetween(newLatLng, lokasiDosen)
+
+                // Jika sudah dalam radius 5 meter dari tujuan
+                if (!hasReachedDestination && distanceToDestination <= destinationRadius) {
+                    hasReachedDestination = true
+                    binding.tvRealtimeInstruction.text = "Tujuan telah dicapai"
+                    binding.imgRealtimeIcon.setImageResource(R.drawable.ic_check_circle_24)
+                    binding.realtimeInstructionLayout.showView()
+                    fusedLocationProvider.removeLocationUpdates(locationCallback)
+                    return
+                }
+
+                // Jika belum sampai tujuan, lanjutkan dengan instruksi navigasi normal
+                if (!hasReachedDestination && currentStepIndex < stepTargets.size) {
                     val distanceToStep = distanceBetween(newLatLng, stepTargets[currentStepIndex])
                     val maneuver = maneuvers[currentStepIndex]
                     val isTurn = maneuver.contains("turn") || maneuver.contains("uturn")
@@ -318,12 +337,12 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                         currentStepIndex++
                         hasSpokenAdvance = false
                     }
-                } else {
-                    // Jika semua langkah selesai
-                    binding.tvRealtimeInstruction.text = "Tujuan telah dicapai"
-                    binding.imgRealtimeIcon.setImageResource(R.drawable.ic_check_circle_24)
+                } else if (!hasReachedDestination && currentStepIndex >= stepTargets.size) {
+                    // Jika semua instruksi Google selesai tapi belum sampai tujuan sebenarnya
+                    val distanceRemaining = distanceToDestination.toInt()
+                    binding.tvRealtimeInstruction.text = "Lanjutkan ke tujuan, ${distanceRemaining}m lagi"
+                    binding.imgRealtimeIcon.setImageResource(R.drawable.ic_direction_straight)
                     binding.realtimeInstructionLayout.showView()
-                    fusedLocationProvider.removeLocationUpdates(locationCallback)
                 }
             }
         }
