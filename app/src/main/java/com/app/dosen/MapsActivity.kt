@@ -33,6 +33,12 @@ import java.io.IOException
 import java.util.*
 
 class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
+    companion object{
+        const val MODE_NONE="0"
+        const val MODE_DIRECTION="1"
+        const val MODE_NAVIGATION="2"
+    }
+
 
     private lateinit var binding: ActivityMapsBinding
     private lateinit var mMap: GoogleMap
@@ -57,6 +63,8 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
 
     // Variabel untuk mengecek apakah sudah sampai tujuan
     private var hasReachedDestination = false
+    private var isAlreadyGetDirection = false
+    private var mode= MODE_NONE
     private val destinationRadius = 5.0f // 5 meter radius untuk tujuan
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,11 +125,26 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
 
         // Klik tombol mulai navigasi
         binding.cvNavigation.setOnClickListener {
-            myLatLng?.let {
-                showLoading("Mengambil Rute...")
-                getDirections(it, lokasiDosen, true)
+            if (mode == MODE_NONE) {
+                myLatLng?.let {
+                    showLoading("Mengambil Rute...")
+                    getDirections(it, lokasiDosen, true)
+                }
+                mode= MODE_DIRECTION
             }
+            else if (mode == MODE_DIRECTION) {
+                startTracking()
+                mode= MODE_NAVIGATION
+            }else if (mode == MODE_NAVIGATION) {
+                stopTracking()
+                resetCameraToDefault()
+                mode= MODE_NONE
+            }
+            setActionView()
+
         }
+        setActionView()
+
     }
 
     // Listener untuk mendapatkan arah kompas dari sensor
@@ -190,8 +213,13 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
     // Mendapatkan lokasi terkini dari perangkat
     private fun getMyLocation(callback: (LatLng) -> Unit) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                1
+            )
             return
         }
 
@@ -210,7 +238,8 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
     // Mengambil rute dan instruksi dari Google Directions API
     private fun getDirections(origin: LatLng, destination: LatLng, isShowRoute: Boolean) {
         val apiKey = "AIzaSyBB7uJxN6nrrQk8Bh8OvaNaexjfyBpZGow"
-        val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&mode=${travelMode}&language=id&key=$apiKey"
+        val url =
+            "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&mode=${travelMode}&language=id&key=$apiKey"
 
         OkHttpClient().newCall(Request.Builder().url(url).build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -222,7 +251,8 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
 
             override fun onResponse(call: Call, response: Response) {
                 val json = JSONObject(response.body?.string() ?: "")
-                val steps = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0).getJSONArray("steps")
+                val steps = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs")
+                    .getJSONObject(0).getJSONArray("steps")
                 val instrList = mutableListOf<String>()
                 val stepList = mutableListOf<LatLng>()
                 val maneuverList = mutableListOf<String>()
@@ -244,7 +274,11 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                     val end = step.getJSONObject("end_location")
                     stepList.add(LatLng(end.getDouble("lat"), end.getDouble("lng")))
                     maneuverList.add(step.optString("maneuver", "straight"))
-                    polyline.addAll(PolyUtil.decode(step.getJSONObject("polyline").getString("points")))
+                    polyline.addAll(
+                        PolyUtil.decode(
+                            step.getJSONObject("polyline").getString("points")
+                        )
+                    )
                 }
 
                 instructions = instrList
@@ -266,18 +300,33 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                         currentPolyline = mMap.addPolyline(
                             PolylineOptions().addAll(polyline).color(Color.BLUE).width(10f)
                         )
-                        startTracking() // Mulai tracking real-time
+//                        startTracking() // Mulai tracking real-time
                     }
+                    isAlreadyGetDirection= true
                     hideLoading()
+                    setActionView()
                 }
             }
         })
+    }
+    private fun setActionView(){
+        if(mode == MODE_NONE){
+            binding.ivAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_directions_24))
+            binding.tvAction.text="Direction"
+        }else if(mode == MODE_DIRECTION){
+            binding.ivAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_navigation))
+            binding.tvAction.text="Navigation"
+        }else if(mode == MODE_NAVIGATION) {
+            binding.ivAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_close_24))
+            binding.tvAction.text="End Navigation"
+        }
     }
 
     // Memulai pelacakan posisi pengguna dan arah belokan
     private fun startTracking() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) return
+            != PackageManager.PERMISSION_GRANTED
+        ) return
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
@@ -296,15 +345,17 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                 // Update marker pengguna
                 myLatLng = newLatLng
                 if (myMarker == null) {
-                    val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_circle_24)
+                    val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_arrow)
                     myMarker = mMap.addMarker(
                         MarkerOptions().position(newLatLng).icon(icon)
                             .anchor(0.5f, 0.5f).flat(true).rotation(currentAzimuth)
                     )
                 } else {
+                    myMarker?.setIcon(getBitmapDescriptor(this@MapsActivity, R.drawable.ic_arrow))
                     myMarker?.position = newLatLng
                     myMarker?.rotation = currentAzimuth
                 }
+
 
                 // Cek jarak ke tujuan sebenarnya (koordinat lokasiDosen)
                 val distanceToDestination = distanceBetween(newLatLng, lokasiDosen)
@@ -327,7 +378,10 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
 
                     // Advance warning: jika 50-100m sebelum belok
                     if (!hasSpokenAdvance && distanceToStep in 50.0..100.0 && isTurn) {
-                        updateStepUI("Dalam ${distanceToStep.toInt()} meter, ${instructions[currentStepIndex]}", maneuver)
+                        updateStepUI(
+                            "Dalam ${distanceToStep.toInt()} meter, ${instructions[currentStepIndex]}",
+                            maneuver
+                        )
                         hasSpokenAdvance = true
                     }
 
@@ -340,14 +394,19 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                 } else if (!hasReachedDestination && currentStepIndex >= stepTargets.size) {
                     // Jika semua instruksi Google selesai tapi belum sampai tujuan sebenarnya
                     val distanceRemaining = distanceToDestination.toInt()
-                    binding.tvRealtimeInstruction.text = "Lanjutkan ke tujuan, ${distanceRemaining}m lagi"
+                    binding.tvRealtimeInstruction.text =
+                        "Lanjutkan ke tujuan, ${distanceRemaining}m lagi"
                     binding.imgRealtimeIcon.setImageResource(R.drawable.ic_direction_straight)
                     binding.realtimeInstructionLayout.showView()
                 }
             }
         }
 
-        fusedLocationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        fusedLocationProvider.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
     }
 
     // Menampilkan instruksi navigasi saat ini di UI
@@ -366,7 +425,13 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
     // Menghitung jarak antara dua titik
     private fun distanceBetween(a: LatLng, b: LatLng): Float {
         val result = FloatArray(1)
-        android.location.Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, result)
+        android.location.Location.distanceBetween(
+            a.latitude,
+            a.longitude,
+            b.latitude,
+            b.longitude,
+            result
+        )
         return result[0]
     }
 
@@ -374,7 +439,11 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
     fun getBitmapDescriptor(context: Context, @DrawableRes vectorResId: Int): BitmapDescriptor {
         val drawable = ContextCompat.getDrawable(context, vectorResId)!!
         drawable.setBounds(0, 0, drawable.intrinsicWidth, drawable.intrinsicHeight)
-        val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
         val canvas = Canvas(bitmap)
         drawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
@@ -384,6 +453,32 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
     override fun onDestroy() {
         super.onDestroy()
         if (::textToSpeech.isInitialized) textToSpeech.shutdown()
-        if (::locationCallback.isInitialized) fusedLocationProvider.removeLocationUpdates(locationCallback)
+        if (::locationCallback.isInitialized) fusedLocationProvider.removeLocationUpdates(
+            locationCallback
+        )
     }
+    private fun stopTracking() {
+        if (::locationCallback.isInitialized) {
+            fusedLocationProvider.removeLocationUpdates(locationCallback)
+        }
+
+        // Ubah icon marker kembali ke ic_circle_24
+        myMarker?.setIcon(getBitmapDescriptor(this, R.drawable.ic_circle_24))
+
+        mode = MODE_NONE
+        setActionView()
+    }
+
+
+    private fun resetCameraToDefault() {
+        val cameraPosition = CameraPosition.Builder()
+            .target(myLatLng!!)
+            .zoom(16f)
+            .tilt(0f)
+            .bearing(currentAzimuth)
+            .build()
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+
+    }
+
 }
