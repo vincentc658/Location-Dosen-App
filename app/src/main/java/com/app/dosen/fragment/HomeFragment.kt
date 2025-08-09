@@ -14,6 +14,7 @@ import com.app.dosen.R
 import com.app.dosen.RuangKerjaActivity
 import com.app.dosen.SearchActivity
 import com.app.dosen.adapter.DosenAdapter
+import com.app.dosen.adapter.DosenPagerAdapter
 import com.app.dosen.adapter.MenuAdapter
 import com.app.dosen.adapter.MenuPagerAdapter
 import com.app.dosen.databinding.FragmentHomeBinding
@@ -37,61 +38,11 @@ class HomeFragment : BaseFragment() {
 
         // Inisialisasi tampilan menu (grid prodi dengan paging)
         setupMenuPager()
-        // Inisialisasi daftar dosen (RecyclerView vertikal)
-        setupRecyclerView()
+        getDataDosen()
 
         return binding.root
     }
 
-    private fun setupRecyclerView() {
-        // Gunakan layout vertikal
-        binding.recyclerDosen.layoutManager = LinearLayoutManager(requireContext())
-
-        // Adapter untuk daftar dosen, dengan klik item menuju RuangKerjaActivity
-        dosenAdapter = DosenAdapter(emptyList()) { dosen ->
-            val bundle = Bundle()
-            bundle.putParcelable("data", dosen)
-            goToPage(RuangKerjaActivity::class.java, bundle)
-        }
-        binding.recyclerDosen.adapter = dosenAdapter
-
-        // Tampilkan loading saat ambil data
-        (requireActivity() as BaseAppCompat).showLoading("")
-
-        // Ambil data dosen dari Firestore
-        FirebaseFirestore.getInstance()
-            .collection("dosen")
-            .get()
-            .addOnSuccessListener { result ->
-                // Parsing tiap dokumen menjadi DosenModel
-                val dosenList = result.mapNotNull { doc ->
-                    try {
-                        DosenModel(
-                            nama = doc.getString("nama") ?: "",
-                            prodi = doc.getString("prodi") ?: "",
-                            namaGedung = doc.getString("namaGedung") ?: "",
-                            kodeRuangan = doc.getString("kodeRuangan") ?: "",
-                            lantaiRuangan = doc.getString("lantaiRuangan") ?: "",
-                            lat = doc.getDouble("lat") ?: 0.0,
-                            long = doc.getDouble("long") ?: 0.0,
-                            fotoDosen = doc.getString("fotoDosen") ?: "",
-                            deskripsiRuangan = doc.getString("deskripsiRuangan") ?: "",
-                            fotoRuangan = doc.getString("fotoRuangan") ?: ""
-                        )
-                    } catch (e: Exception) {
-                        null // Lewati jika parsing gagal
-                    }
-                }
-
-                // Update data ke adapter
-                dosenAdapter.updateData(dosenList)
-                (requireActivity() as BaseAppCompat).hideLoading()
-            }
-            .addOnFailureListener {
-                (requireActivity() as BaseAppCompat).hideLoading()
-                Toast.makeText(requireContext(), "Gagal memuat data dosen", Toast.LENGTH_SHORT).show()
-            }
-    }
 
     private fun setupMenuPager() {
         // Daftar semua menu program studi
@@ -133,5 +84,47 @@ class HomeFragment : BaseFragment() {
         super.onDestroyView()
         _binding = null // Hindari memory leak
     }
+    private fun setupDosenPager(dosenList: List<DosenModel>) {
+        // Bagi data menjadi 10 item per halaman
+        val pages = dosenList.chunked(10)
+
+        val pagerAdapter = DosenPagerAdapter(requireContext(), pages) { dosen ->
+            val bundle = Bundle().apply { putParcelable("data", dosen) }
+            goToPage(RuangKerjaActivity::class.java, bundle)
+        }
+
+        binding.viewPagerDosen.adapter = pagerAdapter
+        binding.dotsIndicatorDosen.setViewPager2(binding.viewPagerDosen)
+    }
+    private fun getDataDosen(){
+        FirebaseFirestore.getInstance()
+            .collection("dosen")
+            .get()
+            .addOnSuccessListener { result ->
+                val dosenList = result.mapNotNull { doc ->
+                    try {
+                        DosenModel(
+                            nama = doc.getString("nama") ?: "",
+                            prodi = doc.getString("prodi") ?: "",
+                            namaGedung = doc.getString("namaGedung") ?: "",
+                            kodeRuangan = doc.getString("kodeRuangan") ?: "",
+                            lantaiRuangan = doc.getString("lantaiRuangan") ?: "",
+                            lat = doc.getDouble("lat") ?: 0.0,
+                            long = doc.getDouble("long") ?: 0.0,
+                            fotoDosen = doc.getString("fotoDosen") ?: "",
+                            deskripsiRuangan = doc.getString("deskripsiRuangan") ?: "",
+                            fotoRuangan = doc.getString("fotoRuangan") ?: ""
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                setupDosenPager(dosenList)
+                (requireActivity() as BaseAppCompat).hideLoading()
+            }
+
+    }
+
 }
 
