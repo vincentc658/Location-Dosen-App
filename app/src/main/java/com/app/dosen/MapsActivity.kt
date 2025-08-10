@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -58,6 +59,7 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
     private var currentStepIndex = 0
     private var hasSpokenAdvance = false
     private var currentPolyline: Polyline? = null
+    private var borderPolyline: Polyline? = null
     private lateinit var sensorManager: SensorManager
     private var currentAzimuth: Float = 0f
 
@@ -147,6 +149,8 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
             }else if (mode == MODE_NAVIGATION) {
                 stopTracking()
                 resetCameraToDefault()
+                currentPolyline?.remove()
+                borderPolyline?.remove()
                 mode= MODE_NONE
             }
             setActionView()
@@ -304,12 +308,9 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
 
                     // Hapus jalur lama
                     currentPolyline?.remove()
+                    borderPolyline?.remove()
                     if (isShowRoute) {
-                        // Tambahkan polyline baru
-                        currentPolyline = mMap.addPolyline(
-                            PolylineOptions().addAll(polyline).color(Color.BLUE).width(10f)
-                        )
-//                        startTracking() // Mulai tracking real-time
+                        createModernPolyline(polyline)
                     }
                     hideLoading()
                     setActionView()
@@ -408,7 +409,7 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
         return null
     }
 
-    // Update locationCallback yang sudah diperbaiki
+    // Update locationCallback untuk panah mengikuti arah hadap user
     private fun startTracking() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
@@ -419,16 +420,6 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                 val loc = result.lastLocation ?: return
                 val newLatLng = LatLng(loc.latitude, loc.longitude)
 
-                // Dapatkan titik target untuk arah navigation
-                val targetPoint = getClosestPointAhead(newLatLng)
-
-                // Hitung bearing ke arah jalur navigation
-                val navigationBearing = if (targetPoint != null) {
-                    calculateBearing(newLatLng, targetPoint)
-                } else {
-                    currentAzimuth // fallback ke kompas jika tidak ada target
-                }
-
                 // KAMERA: Gunakan kompas untuk orientasi peta (agar berputar sesuai arah hadap user)
                 val cameraPosition = CameraPosition.Builder()
                     .target(newLatLng)
@@ -438,25 +429,33 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                     .build()
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-                // ICON: Gunakan bearing relatif (navigation bearing - camera bearing)
-                // Ini membuat icon selalu menunjuk ke arah jalur di peta yang berputar
-                val relativeBearing = (navigationBearing - currentAzimuth + 360) % 360
+                // ICON PANAH: Menggunakan currentAzimuth langsung (arah hadap user)
+                // Karena kamera juga menggunakan currentAzimuth, panah akan selalu menunjuk ke atas peta
+                // yang berarti mengikuti arah hadap user
 
-                // Update marker dengan bearing relatif
+                // Update marker dengan currentAzimuth
                 myLatLng = newLatLng
                 if (myMarker == null) {
-                    val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_arrow)
+                    val icon = getBitmapDescriptorWithShadowBackground(
+                        this@MapsActivity,
+                        R.drawable.ic_arrow,
+                    )
                     myMarker = mMap.addMarker(
                         MarkerOptions().position(newLatLng).icon(icon)
                             .anchor(0.5f, 0.5f).flat(true)
-                            .rotation(relativeBearing) // Bearing relatif terhadap camera
+                            .rotation(0f) // Set ke 0 karena kamera sudah berputar sesuai currentAzimuth
                     )
                 } else {
-                    myMarker?.setIcon(getBitmapDescriptor(this@MapsActivity, R.drawable.ic_arrow))
+                    val icon = getBitmapDescriptorWithShadowBackground(
+                        this@MapsActivity,
+                        R.drawable.ic_arrow,
+                    )
+                    myMarker?.setIcon(icon)
                     myMarker?.position = newLatLng
-                    myMarker?.rotation = relativeBearing // Update dengan bearing relatif
+                    myMarker?.rotation = 0f // Panah selalu menunjuk ke "atas" peta
                 }
 
+                // Sisa kode untuk navigation instructions tetap sama...
                 // Cek jarak ke tujuan sebenarnya (koordinat lokasiDosen)
                 val distanceToDestination = distanceBetween(newLatLng, lokasiDosen)
 
@@ -580,4 +579,86 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
 
     }
 
+    // Fungsi baru untuk membuat icon dengan background circle
+    fun getBitmapDescriptorWithShadowBackground(
+        context: Context,
+        @DrawableRes vectorResId: Int
+    ): BitmapDescriptor {
+        val drawable = ContextCompat.getDrawable(context, vectorResId)!!
+
+        val backgroundSize = (drawable.intrinsicWidth * 1.25).toInt() // Diperkecil dari 1.5 ke 1.25
+        val iconSize = (drawable.intrinsicWidth * 0.8).toInt()        // Diperbesar dari 0.7 ke 0.8
+
+        val bitmap = Bitmap.createBitmap(
+            backgroundSize,
+            backgroundSize,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+
+        val centerX = backgroundSize / 2f
+        val centerY = backgroundSize / 2f
+        val radius = (backgroundSize / 2f) - 3f
+
+        // Shadow circle (sedikit offset, lebih transparent)
+        val shadowPaint = Paint().apply {
+            color = Color.parseColor("#20000000") // Hitam transparan (lebih ringan)
+            isAntiAlias = true
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(centerX + 1.5f, centerY + 1.5f, radius, shadowPaint)
+
+        // Background circle putih semi-transparent
+        val backgroundPaint = Paint().apply {
+            color = Color.parseColor("#E6FFFFFF") // Putih semi-transparent (90% opacity)
+            isAntiAlias = true
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(centerX, centerY, radius, backgroundPaint)
+
+        // Border circle semi-transparent
+        val borderPaint = Paint().apply {
+            color = Color.parseColor("#80CCCCCC") // Abu-abu semi-transparent (50% opacity)
+            isAntiAlias = true
+            style = Paint.Style.STROKE
+            strokeWidth = 1.5f // Diperkecil dari 2f ke 1.5f
+        }
+        canvas.drawCircle(centerX, centerY, radius, borderPaint)
+
+        // Icon di tengah
+        val iconLeft = (backgroundSize - iconSize) / 2
+        val iconTop = (backgroundSize - iconSize) / 2
+
+        drawable.setBounds(iconLeft, iconTop, iconLeft + iconSize, iconTop + iconSize)
+        drawable.draw(canvas)
+
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+    private fun createModernPolyline(polyline: List<LatLng>) {
+        // Hapus polyline lama
+        currentPolyline?.remove()
+        borderPolyline?.remove()
+
+        // Buat polyline border (lebih lebar, warna gelap)
+        borderPolyline = mMap.addPolyline(
+            PolylineOptions()
+                .addAll(polyline)
+                .color(Color.parseColor("#CCffffff")) // Hitam semi-transparent
+                .width(20f) // Lebih lebar untuk border
+                .jointType(JointType.ROUND) // Ujung melengkung
+                .endCap(RoundCap()) // Cap bulat
+                .startCap(RoundCap())
+        )
+
+        // Buat polyline utama (di atas border)
+        currentPolyline = mMap.addPolyline(
+            PolylineOptions()
+                .addAll(polyline)
+                .color(ContextCompat.getColor(this@MapsActivity, R.color.blue))
+                .width(12f)
+                .jointType(JointType.ROUND)
+                .endCap(RoundCap())
+                .startCap(RoundCap())
+        )
+    }
 }

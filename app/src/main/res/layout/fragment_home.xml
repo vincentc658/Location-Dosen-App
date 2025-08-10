@@ -90,6 +90,15 @@
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+                <com.tbuonomo.viewpagerdotsindicator.DotsIndicator
+                    android:id="@+id/dotsIndicatorDosen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="16dp"
+                    app:dotsColor="@color/white"
+                    app:dotsSize="@dimen/size_8"
+                    app:selectedDotColor="@color/navy" />
 
                 <androidx.viewpager2.widget.ViewPager2
                     android:id="@+id/viewPagerDosen"
@@ -101,15 +110,7 @@
                     android:overScrollMode="never"
                     android:layout_marginBottom="8dp" />
 
-                <com.tbuonomo.viewpagerdotsindicator.DotsIndicator
-                    android:id="@+id/dotsIndicatorDosen"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="16dp"
-                    app:dotsColor="@color/white"
-                    app:dotsSize="@dimen/size_8"
-                    app:selectedDotColor="@color/navy" />
+
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

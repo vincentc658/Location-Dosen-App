@@ -5,20 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.app.dosen.DosenDataManager
 import com.app.dosen.R
 import com.app.dosen.RuangKerjaActivity
-import com.app.dosen.SearchActivity
+import com.app.dosen.DetailProdiActivity
 import com.app.dosen.adapter.DosenAdapter
 import com.app.dosen.adapter.DosenPagerAdapter
-import com.app.dosen.adapter.MenuAdapter
 import com.app.dosen.adapter.MenuPagerAdapter
 import com.app.dosen.databinding.FragmentHomeBinding
-import com.app.dosen.databinding.ItemProdiCircleBinding
 import com.app.dosen.model.DosenModel
 import com.app.dosen.model.MenuItem
 import com.app.dosen.util.BaseAppCompat
@@ -72,7 +65,7 @@ class HomeFragment : BaseFragment() {
             // Saat menu dipilih, buka SearchActivity dan kirim label prodi
             val bundle = Bundle()
             bundle.putString("prodi", selectedMenu.label)
-            goToPage(SearchActivity::class.java, bundle)
+            goToPage(DetailProdiActivity::class.java, bundle)
         }
 
         // Pasang adapter ke ViewPager dan hubungkan dengan dotsIndicator

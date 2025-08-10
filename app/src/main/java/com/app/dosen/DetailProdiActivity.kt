@@ -3,25 +3,24 @@ package com.app.dosen
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.dosen.adapter.DosenAdapter
-import com.app.dosen.databinding.ActivitySearchBinding
 import com.app.dosen.model.DosenModel
 import com.google.firebase.firestore.FirebaseFirestore
 import android.widget.Toast
+import com.app.dosen.databinding.ActivityDetailProdiBinding
 import com.app.dosen.util.BaseAppCompat
 
-class SearchActivity : BaseAppCompat() {
+class DetailProdiActivity : BaseAppCompat() {
 
-    private lateinit var binding: ActivitySearchBinding
+    private lateinit var binding: ActivityDetailProdiBinding
     private lateinit var adapter: DosenAdapter
     private var fullList: List<DosenModel> = emptyList()
     private var prodi: String = "Semua" // Nilai default filter prodi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySearchBinding.inflate(layoutInflater)
+        binding = ActivityDetailProdiBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         // 🔽 Ambil parameter "prodi" dari halaman sebelumnya
