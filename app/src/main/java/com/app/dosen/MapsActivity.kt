@@ -104,20 +104,28 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
 
         // Klik mode Driving
         binding.llDriving.setOnClickListener {
+            if(mode== MODE_NAVIGATION)
+            {
+                return@setOnClickListener
+            }
             if (myLatLng == null) return@setOnClickListener
             travelMode = "driving"
             binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(true)
-            getDirections(myLatLng!!, lokasiDosen, false)
+            getDirections(myLatLng!!, lokasiDosen, isAlreadyGetDirection)
         }
 
         // Klik mode Walking
         binding.llWalking.setOnClickListener {
+            if(mode== MODE_NAVIGATION)
+            {
+                return@setOnClickListener
+            }
             if (myLatLng == null) return@setOnClickListener
             travelMode = "walking"
             binding.tvMode.text = travelMode.replaceFirstChar { it.uppercaseChar() }
             highlightSelectedMode(false)
-            getDirections(myLatLng!!, lokasiDosen, false)
+            getDirections(myLatLng!!, lokasiDosen, isAlreadyGetDirection)
         }
 
         // Klik tombol batal
@@ -130,6 +138,7 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                     showLoading("Mengambil Rute...")
                     getDirections(it, lokasiDosen, true)
                 }
+                isAlreadyGetDirection= true
                 mode= MODE_DIRECTION
             }
             else if (mode == MODE_DIRECTION) {
@@ -302,7 +311,6 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                         )
 //                        startTracking() // Mulai tracking real-time
                     }
-                    isAlreadyGetDirection= true
                     hideLoading()
                     setActionView()
                 }
@@ -321,8 +329,86 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
             binding.tvAction.text="End Navigation"
         }
     }
+    // Tambahkan fungsi untuk menghitung bearing antara dua titik
+    private fun calculateBearing(start: LatLng, end: LatLng): Float {
+        val lat1 = Math.toRadians(start.latitude)
+        val lat2 = Math.toRadians(end.latitude)
+        val deltaLon = Math.toRadians(end.longitude - start.longitude)
 
-    // Memulai pelacakan posisi pengguna dan arah belokan
+        val y = Math.sin(deltaLon) * Math.cos(lat2)
+        val x = Math.cos(lat1) * Math.sin(lat2) -
+                Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon)
+
+        var bearing = Math.toDegrees(Math.atan2(y, x))
+        // Normalisasi bearing ke 0-360 derajat
+        bearing = (bearing + 360) % 360
+        return bearing.toFloat()
+    }
+
+    // Fungsi untuk mendapatkan titik yang lebih dekat di polyline
+    private fun getClosestPointAhead(currentLocation: LatLng): LatLng? {
+        if (polylinePoints.isEmpty()) return lokasiDosen
+
+        var closestDistance = Float.MAX_VALUE
+        var closestIndex = -1
+
+        // Cari titik terdekat di polyline
+        for (i in polylinePoints.indices) {
+            val distance = distanceBetween(currentLocation, polylinePoints[i])
+            if (distance < closestDistance) {
+                closestDistance = distance
+                closestIndex = i
+            }
+        }
+
+        // Ambil beberapa titik ke depan untuk arah yang lebih stabil
+        val lookAheadDistance = 20 // meter
+        for (i in (closestIndex + 1) until polylinePoints.size) {
+            val distance = distanceBetween(currentLocation, polylinePoints[i])
+            if (distance >= lookAheadDistance) {
+                return polylinePoints[i]
+            }
+        }
+
+        // Jika tidak ada titik yang cukup jauh, gunakan tujuan akhir
+        return lokasiDosen
+    }
+
+    // Fungsi untuk mendapatkan titik target berikutnya di jalur
+    private fun getNextTargetPoint(currentLocation: LatLng): LatLng? {
+        // Jika masih ada step target, gunakan step target berikutnya
+        if (currentStepIndex < stepTargets.size) {
+            return stepTargets[currentStepIndex]
+        }
+
+        // Jika step sudah habis tapi belum sampai tujuan,
+        // cari titik terdekat di polyline untuk navigasi yang lebih akurat
+        if (!hasReachedDestination && polylinePoints.isNotEmpty()) {
+            var closestPoint = lokasiDosen
+            var minDistance = distanceBetween(currentLocation, lokasiDosen)
+
+            // Cari titik di polyline yang paling dekat dengan posisi saat ini
+            for (point in polylinePoints) {
+                val distance = distanceBetween(currentLocation, point)
+                if (distance < minDistance) {
+                    minDistance = distance
+                    closestPoint = point
+                }
+            }
+
+            // Jika ada titik yang lebih dekat di polyline, gunakan titik setelahnya
+            val currentIndex = polylinePoints.indexOf(closestPoint)
+            if (currentIndex != -1 && currentIndex < polylinePoints.size - 1) {
+                return polylinePoints[currentIndex + 1]
+            }
+
+            return lokasiDosen
+        }
+
+        return null
+    }
+
+    // Update locationCallback yang sudah diperbaiki
     private fun startTracking() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
@@ -333,29 +419,43 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                 val loc = result.lastLocation ?: return
                 val newLatLng = LatLng(loc.latitude, loc.longitude)
 
-                // Update posisi dan kamera
+                // Dapatkan titik target untuk arah navigation
+                val targetPoint = getClosestPointAhead(newLatLng)
+
+                // Hitung bearing ke arah jalur navigation
+                val navigationBearing = if (targetPoint != null) {
+                    calculateBearing(newLatLng, targetPoint)
+                } else {
+                    currentAzimuth // fallback ke kompas jika tidak ada target
+                }
+
+                // KAMERA: Gunakan kompas untuk orientasi peta (agar berputar sesuai arah hadap user)
                 val cameraPosition = CameraPosition.Builder()
                     .target(newLatLng)
                     .zoom(18f)
                     .tilt(60f)
-                    .bearing(currentAzimuth)
+                    .bearing(currentAzimuth) // Kamera ikut kompas (arah hadap user)
                     .build()
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-                // Update marker pengguna
+                // ICON: Gunakan bearing relatif (navigation bearing - camera bearing)
+                // Ini membuat icon selalu menunjuk ke arah jalur di peta yang berputar
+                val relativeBearing = (navigationBearing - currentAzimuth + 360) % 360
+
+                // Update marker dengan bearing relatif
                 myLatLng = newLatLng
                 if (myMarker == null) {
                     val icon = getBitmapDescriptor(this@MapsActivity, R.drawable.ic_arrow)
                     myMarker = mMap.addMarker(
                         MarkerOptions().position(newLatLng).icon(icon)
-                            .anchor(0.5f, 0.5f).flat(true).rotation(currentAzimuth)
+                            .anchor(0.5f, 0.5f).flat(true)
+                            .rotation(relativeBearing) // Bearing relatif terhadap camera
                     )
                 } else {
                     myMarker?.setIcon(getBitmapDescriptor(this@MapsActivity, R.drawable.ic_arrow))
                     myMarker?.position = newLatLng
-                    myMarker?.rotation = currentAzimuth
+                    myMarker?.rotation = relativeBearing // Update dengan bearing relatif
                 }
-
 
                 // Cek jarak ke tujuan sebenarnya (koordinat lokasiDosen)
                 val distanceToDestination = distanceBetween(newLatLng, lokasiDosen)
@@ -408,7 +508,6 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
             Looper.getMainLooper()
         )
     }
-
     // Menampilkan instruksi navigasi saat ini di UI
     private fun updateStepUI(text: String, maneuver: String) {
         binding.tvRealtimeInstruction.text = text
