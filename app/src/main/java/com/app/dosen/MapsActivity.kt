@@ -576,7 +576,7 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
             .bearing(currentAzimuth)
             .build()
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-
+        binding.realtimeInstructionLayout.hideView()
     }
 
     // Fungsi baru untuk membuat icon dengan background circle

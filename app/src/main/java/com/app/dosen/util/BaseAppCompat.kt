@@ -46,6 +46,9 @@ open class BaseAppCompat : AppCompatActivity(), CallBackIntentData {
     fun View.showView() {
         this.visibility = View.VISIBLE
     }
+    fun View.hideView() {
+        this.visibility = View.GONE
+    }
     // Navigasi dengan startActivityForResult (tanpa bundle)
     fun goToPageActivityResult(cls: Class<*>?, requestCode: Int) {
         this.requestCode = requestCode
