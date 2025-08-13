@@ -152,6 +152,7 @@ class MapsActivity : BaseAppCompat(), OnMapReadyCallback {
                 currentPolyline?.remove()
                 borderPolyline?.remove()
                 mode= MODE_NONE
+                isAlreadyGetDirection=false
             }
             setActionView()
 
